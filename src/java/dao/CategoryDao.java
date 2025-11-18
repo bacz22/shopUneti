@@ -106,17 +106,52 @@ public class CategoryDao {
 		}
 	}
 	
-	public void deleteCategory(int cid) {
+	public boolean deleteCategory(int cid) {
+		boolean success = false;
+		String cartQuery = "delete from cart where pid in (select pid from (select pid from product where cid = ?) as prod)";
+		String wishlistQuery = "delete from wishlist where idproduct in (select pid from (select pid from product where cid = ?) as prod)";
+		String productQuery = "delete from product where cid = ?";
+		String categoryQuery = "delete from category where cid = ?";
 		try {
-			String query = "delete from category where cid = ?";
-			PreparedStatement psmt = this.con.prepareStatement(query);
-			psmt.setInt(1, cid);
+			this.con.setAutoCommit(false);
 			
-			psmt.executeUpdate();
+			PreparedStatement cartStmt = this.con.prepareStatement(cartQuery);
+			cartStmt.setInt(1, cid);
+			cartStmt.executeUpdate();
+			cartStmt.close();
 			
+			PreparedStatement wishlistStmt = this.con.prepareStatement(wishlistQuery);
+			wishlistStmt.setInt(1, cid);
+			wishlistStmt.executeUpdate();
+			wishlistStmt.close();
+			
+			PreparedStatement productStmt = this.con.prepareStatement(productQuery);
+			productStmt.setInt(1, cid);
+			productStmt.executeUpdate();
+			productStmt.close();
+			
+			PreparedStatement categoryStmt = this.con.prepareStatement(categoryQuery);
+			categoryStmt.setInt(1, cid);
+			categoryStmt.executeUpdate();
+			categoryStmt.close();
+			
+			this.con.commit();
+			success = true;
 		} catch (Exception e) {
+			try {
+				this.con.rollback();
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
 			e.printStackTrace();
+		} finally {
+			try {
+				this.con.setAutoCommit(true);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
+		return success;
 	}
 	public int categoryCount() {
 		int count = 0;

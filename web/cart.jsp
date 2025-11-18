@@ -78,7 +78,7 @@ if (activeUser == null) {
 						Product prod = productDao.getProductsByProductId(c.getProductId());						
 					%>
 					<tr class="text-center">
-						<td><img src="Product_imgs\<%=prod.getProductImages()%>"
+						<td><img src="Images/<%=prod.getProductImages()%>"
 							style="width: 50px; height: 50px; width: auto;"></td>
 						<td class="text-start"><%=prod.getProductName()%></td>
 						<td>&#8377;<%=prod.getProductPriceAfterDiscount()%></td>

@@ -39,7 +39,7 @@ public class AddOperationServlet extends HttpServlet {
 			Category category = new Category(categoryName, part.getSubmittedFileName());
 			boolean flag = catDao.saveCategory(category);
 
-			String path = request.getServletContext().getRealPath("/") + "Product_imgs" + File.separator
+			String path = request.getServletContext().getRealPath("/") + "Images" + File.separator
 					+ part.getSubmittedFileName();
 
 			try {
@@ -81,7 +81,7 @@ public class AddOperationServlet extends HttpServlet {
 					categoryType);
 			boolean flag = pdao.saveProduct(product);
 
-			String path = request.getServletContext().getRealPath("/") + "Product_imgs" + File.separator
+			String path = request.getServletContext().getRealPath("/") + "Images" + File.separator
 					+ part.getSubmittedFileName();
 			try {
 				FileOutputStream fos = new FileOutputStream(path);
@@ -115,7 +115,7 @@ public class AddOperationServlet extends HttpServlet {
 			} else {
 				Category category = new Category(cid, name, part.getSubmittedFileName());
 				catDao.updateCategory(category);
-				String path = request.getServletContext().getRealPath("/") + "Product_imgs" + File.separator
+				String path = request.getServletContext().getRealPath("/") + "Images" + File.separator
 						+ part.getSubmittedFileName();
 				try {
 					FileOutputStream fos = new FileOutputStream(path);
@@ -137,7 +137,14 @@ public class AddOperationServlet extends HttpServlet {
 		} else if (operation.trim().equals("deleteCategory")) {
 
 			int cid = Integer.parseInt(request.getParameter("cid"));
-			catDao.deleteCategory(cid);
+			boolean deleted = catDao.deleteCategory(cid);
+			if (deleted) {
+				message = new Message("Category deleted successfully!!", "success", "alert-success");
+			} else {
+				message = new Message("Unable to delete category. Remove dependent products or try again!", "error",
+						"alert-danger");
+			}
+			session.setAttribute("message", message);
 			response.sendRedirect("display_category.jsp");
 
 		} else if (operation.trim().equals("updateProduct")) {
@@ -166,7 +173,7 @@ public class AddOperationServlet extends HttpServlet {
 						part.getSubmittedFileName(), cid);
 				pdao.updateProduct(product);
 				// product image upload
-				String path = request.getServletContext().getRealPath("/") + "Product_imgs" + File.separator
+				String path = request.getServletContext().getRealPath("/") + "Images" + File.separator
 						+ part.getSubmittedFileName();
 				try {
 					FileOutputStream fos = new FileOutputStream(path);

@@ -19,7 +19,7 @@ List<Product> prodList = null;
 if (searchKey != null) {
 	if (!searchKey.isEmpty()) {
 		message = "Showing results for \"" + searchKey + "\"";
-	}else{
+	} else {
 		message = "No product found!";
 	}
 	prodList = productDao.getAllProductsBySearchKey(searchKey);
@@ -33,10 +33,13 @@ if (searchKey != null) {
 }
 
 if (prodList != null && prodList.size() == 0) {
-
-	message = "No items are available for \""
-	+ (searchKey != null ? searchKey : categoryDao.getCategoryName(Integer.parseInt(catId.trim()))) + "\"";
-
+	String noResultLabel = "All Products";
+	if (searchKey != null && !searchKey.isEmpty()) {
+		noResultLabel = searchKey;
+	} else if (catId != null && !(catId.trim().equals("0"))) {
+		noResultLabel = categoryDao.getCategoryName(Integer.parseInt(catId.trim()));
+	}
+	message = "No items are available for \"" + noResultLabel + "\"";
 	prodList = productDao.getAllProducts();
 }
 %>
@@ -75,6 +78,54 @@ if (prodList != null && prodList.size() == 0) {
 	padding-right: 40px;
 	background: #fff;
 }
+
+.product-card {
+	border: none;
+	border-radius: 18px;
+	box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+	transition: all 0.3s ease;
+	background: #ffffff;
+}
+
+.product-card:hover {
+	transform: translateY(-8px);
+	box-shadow: 0 22px 40px rgba(0, 0, 0, 0.12);
+}
+
+.product-image-wrapper {
+	position: relative;
+	background: #f8fbff;
+	border-radius: 14px;
+	padding: 16px;
+	min-height: 230px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.product-card img {
+	transition: transform 0.3s ease;
+}
+
+.product-card:hover img {
+	transform: scale(1.03);
+}
+
+.btn-view {
+	border-radius: 30px;
+	padding: 8px 20px;
+}
+
+.btn-cart {
+	border-radius: 30px;
+	padding: 8px 22px;
+	background: linear-gradient(135deg, #00b5ff, #0066ff);
+	border: none;
+}
+
+.btn-cart:hover {
+	background: linear-gradient(135deg, #009eea, #0053d9);
+}
 </style>
 </head>
 <body style="background-color: #f0f0f0;">
@@ -91,11 +142,11 @@ if (prodList != null && prodList.size() == 0) {
 			%>
 			<div class="col">
 
-				<div class="card h-100 px-2 py-2">
-					<div class="container text-center">
-						<img src="Product_imgs\<%=p.getProductImages()%>"
-							class="card-img-top m-2"
-							style="max-width: 100%; max-height: 200px; width: auto;">
+				<div class="card h-100 px-3 py-3 product-card">
+					<div class="product-image-wrapper text-center position-relative">
+						<img src="Images/<%=p.getProductImages()%>"
+							class="card-img-top"
+							style="max-width: 100%; max-height: 220px; width: auto;">
 						<div class="wishlist-icon">
 							<%
 							if (u != null) {
@@ -127,18 +178,34 @@ if (prodList != null && prodList.size() == 0) {
 							%>
 
 						</div>
-						<h5 class="card-title text-center"><%=p.getProductName()%></h5>
+					</div>
+					<h5 class="card-title text-center mt-3"><%=p.getProductName()%></h5>
 
-						<div class="container text-center">
-							<span class="real-price">&#8377;<%=p.getProductPriceAfterDiscount()%></span>&ensp;
-							<span class="product-price">&#8377;<%=p.getProductPrice()%></span>&ensp;
-							<span class="product-discount"><%=p.getProductDiscount()%>&#37;off</span>
-						</div>
-						<div class="container text-center mb-2 mt-2">
-							<button type="button"
-								onclick="window.open('viewProduct.jsp?pid=<%=p.getProductId()%>', '_self')"
-								class="btn btn-primary text-white">View Details</button>
-						</div>
+					<div class="container text-center">
+						<span class="real-price">&#8377;<%=p.getProductPriceAfterDiscount()%></span>&ensp;
+						<span class="product-price">&#8377;<%=p.getProductPrice()%></span>&ensp;
+						<span class="product-discount"><%=p.getProductDiscount()%>&#37;off</span>
+					</div>
+					<div class="d-flex justify-content-center gap-2 flex-wrap mt-3">
+						<button type="button"
+							onclick="window.open('viewProduct.jsp?pid=<%=p.getProductId()%>', '_self')"
+							class="btn btn-outline-primary btn-view">View Details</button>
+						<%
+						if (u != null) {
+						%>
+						<form action="AddToCartServlet" method="post" class="d-inline">
+							<input type="hidden" name="uid" value="<%=u.getUserId()%>">
+							<input type="hidden" name="pid" value="<%=p.getProductId()%>">
+							<button type="submit" class="btn btn-cart text-white">Add to Cart</button>
+						</form>
+						<%
+						} else {
+						%>
+						<button type="button" onclick="window.open('login.jsp', '_self')"
+							class="btn btn-cart text-white">Add to Cart</button>
+						<%
+						}
+						%>
 					</div>
 				</div>
 			</div>
