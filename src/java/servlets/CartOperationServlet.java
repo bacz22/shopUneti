@@ -28,35 +28,30 @@ public class CartOperationServlet extends HttpServlet {
 		int quantity = productDao.getProductQuantityById(pid);	
 		
 		if(opt == 1) {
-			if(quantity > 0) {
+			// Tăng số lượng trong giỏ (chỉ kiểm tra kho, không trừ)
+			if(quantity > qty) {
 				cartDao.updateQuantity(cid, qty+1);
-				//updating(decreasing) quantity of product in database
-				productDao.updateQuantity(pid, productDao.getProductQuantityById(pid) - 1);
 				response.sendRedirect("cart.jsp");
-				
-			}else {
+			} else {
 				HttpSession session = request.getSession();
-				Message message = new Message("Product out of stock!", "error", "alert-danger");
+				Message message = new Message("Product out of stock! Only " + quantity + " items available.", "error", "alert-danger");
 				session.setAttribute("message", message);
 				response.sendRedirect("cart.jsp");
 			}
 			
 		}else if(opt == 2) {
-			cartDao.updateQuantity(cid, qty-1);
-			
-			//updating(increasing) quantity of product in database
-			productDao.updateQuantity(pid, productDao.getProductQuantityById(pid) + 1);
+			// Giảm số lượng trong giỏ (không cộng lại vào kho)
+			if(qty > 1) {
+				cartDao.updateQuantity(cid, qty-1);
+			}
 			response.sendRedirect("cart.jsp");
 			
 		}else if(opt == 3) {
+			// Xóa sản phẩm khỏi giỏ (không cộng lại vào kho)
 			cartDao.removeProduct(cid);
 			HttpSession session = request.getSession();
 			Message message = new Message("Product removed from cart!", "success", "alert-success");
 			session.setAttribute("message", message);
-			
-			//updating quantity of product in database
-			//adding all the product qty back to database
-			productDao.updateQuantity(pid, productDao.getProductQuantityById(pid) + qty);
 			response.sendRedirect("cart.jsp");
 		}
 		

@@ -55,6 +55,12 @@ public class OrderOperationServlet extends HttpServlet {
 
 					OrderedProduct orderedProduct = new OrderedProduct(prodName, prodQty, price, image, id);
 					orderedProductDao.insertOrderedProduct(orderedProduct);
+					
+					// Trừ số lượng trong kho khi đặt hàng
+					int currentStock = productDao.getProductQuantityById(item.getProductId());
+					int newStock = currentStock - prodQty;
+					if (newStock < 0) newStock = 0;
+					productDao.updateQuantity(item.getProductId(), newStock);
 				}
 				session.removeAttribute("from");
 				session.removeAttribute("totalPrice");
@@ -70,6 +76,12 @@ public class OrderOperationServlet extends HttpServlet {
 			try {
 
 				int pid = (int) session.getAttribute("pid");
+				// Đọc số lượng từ session (mặc định là 1 nếu không có)
+				int prodQty = 1;
+				if (session.getAttribute("buyQuantity") != null) {
+					prodQty = (int) session.getAttribute("buyQuantity");
+				}
+				
 				Order order = new Order(orderId, status, paymentType, user.getUserId());
 				OrderDao orderDao = new OrderDao(ConnectionProvider.getConnection());
 				int id = orderDao.insertOrder(order);
@@ -78,18 +90,21 @@ public class OrderOperationServlet extends HttpServlet {
 
 				Product prod = productDao.getProductsByProductId(pid);
 				String prodName = prod.getProductName();
-				int prodQty = 1;
 				float price = prod.getProductPriceAfterDiscount();
 				String image = prod.getProductImages();
 
 				OrderedProduct orderedProduct = new OrderedProduct(prodName, prodQty, price, image, id);
 				orderedProductDao.insertOrderedProduct(orderedProduct);
 				
-				//updating(decreasing) quantity of product in database
-				productDao.updateQuantity(pid, productDao.getProductQuantityById(pid) - 1);
+				// Trừ số lượng trong kho khi đặt hàng
+				int currentStock = productDao.getProductQuantityById(pid);
+				int newStock = currentStock - prodQty;
+				if (newStock < 0) newStock = 0;
+				productDao.updateQuantity(pid, newStock);
 				
 				session.removeAttribute("from");
 				session.removeAttribute("pid");
+				session.removeAttribute("buyQuantity");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

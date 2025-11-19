@@ -18,48 +18,51 @@ public class AdminDao {
 		this.con = con;
 	}
 	
-	public boolean saveAdmin(Admin admin) {
-		boolean flag = false;
+	// 1. Lưu admin mới → lưu mật khẩu PLAIN TEXT (theo yêu cầu)
+    public boolean saveAdmin(Admin admin) {
+        boolean flag = false;
+        String query = "INSERT INTO admin(name, email, password, phone) VALUES(?, ?, ?, ?)";
 
-		try {
-			String query = "insert into admin(name, email, password, phone) values(?, ?, ?, ?)";
-			PreparedStatement psmt = this.con.prepareStatement(query);
-			psmt.setString(1, admin.getName());
-			psmt.setString(2, admin.getEmail());
-			psmt.setString(3, admin.getPassword());
-			psmt.setString(4, admin.getPhone());
+        try (PreparedStatement psmt = con.prepareStatement(query)) {
+            psmt.setString(1, admin.getName());
+            psmt.setString(2, admin.getEmail());
 
-			psmt.executeUpdate();
-			flag = true;
+            // LƯU TRỰC TIẾP MẬT KHẨU (không mã hóa)
+            psmt.setString(3, admin.getPassword());
 
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return flag;
-	}
-	public Admin getAdminByEmailPassword(String email, String password) {
-		Admin admin = null;
-		try {
-			String query = "select * from admin where email = ? and password = ?";
-			PreparedStatement psmt = this.con.prepareStatement(query);
-			psmt.setString(1, email);
-			psmt.setString(2, password);
+            psmt.setString(4, admin.getPhone());
 
-			ResultSet set = psmt.executeQuery();
-			while (set.next()) {
-				admin = new Admin();
-				admin.setId(set.getInt("id"));
-				admin.setName(set.getString("name"));
-				admin.setEmail(set.getString("email"));
-				admin.setPassword(set.getString("password"));
-				admin.setPhone(set.getString("phone"));
-			}
+            psmt.executeUpdate();
+            flag = true;
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return admin;
-	}
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return flag;
+    }
+	// 2. Lấy admin theo email (dùng để đăng nhập)
+    public Admin getAdminByEmail(String email) {
+        Admin admin = null;
+        String query = "SELECT * FROM admin WHERE email = ?";
+
+        try (PreparedStatement ps = con.prepareStatement(query)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    admin = new Admin();
+                    admin.setId(rs.getInt("id"));
+                    admin.setName(rs.getString("name"));
+                    admin.setEmail(rs.getString("email"));
+                    admin.setPassword(rs.getString("password")); // đã được hash
+                    admin.setPhone(rs.getString("phone"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return admin;
+    }
+    // Không còn dùng BCrypt: có thể bỏ method này nếu không cần
 	public List<Admin> getAllAdmin(){
 		List<Admin> list = new ArrayList<Admin>();
 		try {

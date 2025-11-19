@@ -21,190 +21,236 @@ import helper.ConnectionProvider;
 
 @MultipartConfig
 public class AddOperationServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-		String operation = request.getParameter("operation");
-		CategoryDao catDao = new CategoryDao(ConnectionProvider.getConnection());
-		ProductDao pdao = new ProductDao(ConnectionProvider.getConnection());
-		HttpSession session = request.getSession();
-		Message message = null;
+        // Đặt encoding để xử lý tiếng Việt
+        request.setCharacterEncoding("UTF-8");
 
-		if (operation.trim().equals("addCategory")) {
+        String operation = request.getParameter("operation");
+        CategoryDao catDao = new CategoryDao(ConnectionProvider.getConnection());
+        ProductDao pdao = new ProductDao(ConnectionProvider.getConnection());
+        HttpSession session = request.getSession();
+        Message message = null;
 
-			String categoryName = request.getParameter("category_name");
-			Part part = request.getPart("category_img");
-			Category category = new Category(categoryName, part.getSubmittedFileName());
-			boolean flag = catDao.saveCategory(category);
+        try {
+            // ==========================================
+            // 1. ADD CATEGORY
+            // ==========================================
+            if (operation.trim().equals("addCategory")) {
 
-			String path = request.getServletContext().getRealPath("/") + "Images" + File.separator
-					+ part.getSubmittedFileName();
+                String categoryName = request.getParameter("category_name");
+                Part part = request.getPart("category_img");
+                
+                String imgName = "default.png";
+                if(part != null && part.getSize() > 0) {
+                    imgName = part.getSubmittedFileName();
+                }
 
-			try {
-				FileOutputStream fos = new FileOutputStream(path);
-				InputStream is = part.getInputStream();
-				byte[] data = new byte[is.available()];
-				is.read(data);
-				fos.write(data);
-				fos.flush();
-				fos.close();
+                Category category = new Category(categoryName, imgName);
+                boolean flag = catDao.saveCategory(category);
 
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+                if(part != null && part.getSize() > 0) {
+                    String path = request.getServletContext().getRealPath("/") + "Images" + File.separator + imgName;
+                    saveFile(part.getInputStream(), path);
+                }
 
-			if (flag) {
-				message = new Message("Category added successfully!!", "success", "alert-success");
-			} else {
-				message = new Message("Something went wrong! Try again!!", "error", "alert-danger");
-			}
-			session.setAttribute("message", message);
-			response.sendRedirect("admin.jsp");
+                if (flag) {
+                    message = new Message("Thêm danh mục thành công!", "success", "alert-success");
+                } else {
+                    message = new Message("Lỗi! Không thể thêm danh mục.", "error", "alert-danger");
+                }
+                session.setAttribute("message", message);
+                response.sendRedirect("admin.jsp?page=category");
 
-		} else if (operation.trim().equals("addProduct")) {
+            // ==========================================
+            // 2. ADD PRODUCT
+            // ==========================================
+            } else if (operation.trim().equals("addProduct")) {
 
-			// add product to database
-			String pName = request.getParameter("name");
-			String pDesc = request.getParameter("description");
-			int pPrice = Integer.parseInt(request.getParameter("price"));
-			int pDiscount = Integer.parseInt(request.getParameter("discount"));
-			if (pDiscount < 0 || pDiscount > 100) {
-				pDiscount = 0;
-			}
-			int pQuantity = Integer.parseInt(request.getParameter("quantity"));
-			Part part = request.getPart("photo");
-			int categoryType = Integer.parseInt(request.getParameter("categoryType"));
+                // Lấy dữ liệu từ form (Chú ý: name phải khớp với file add_product_modal.jsp)
+                // Nếu bạn dùng form cũ thì là "name", form mới mình gửi là "pName"
+                // Code này hỗ trợ cả 2 trường hợp (ưu tiên form mới)
+                String pName = request.getParameter("pName") != null ? request.getParameter("pName") : request.getParameter("name");
+                String pDesc = request.getParameter("pDesc") != null ? request.getParameter("pDesc") : request.getParameter("description");
+                
+                // Xử lý giá (tránh lỗi null)
+                int pPrice = 0;
+                String priceStr = request.getParameter("pPrice") != null ? request.getParameter("pPrice") : request.getParameter("price");
+                if(priceStr != null && !priceStr.isEmpty()) pPrice = Integer.parseInt(priceStr);
 
-			Product product = new Product(pName, pDesc, pPrice, pDiscount, pQuantity, part.getSubmittedFileName(),
-					categoryType);
-			boolean flag = pdao.saveProduct(product);
+                int pDiscount = 0;
+                String discStr = request.getParameter("pDiscount") != null ? request.getParameter("pDiscount") : request.getParameter("discount");
+                if(discStr != null && !discStr.isEmpty()) pDiscount = Integer.parseInt(discStr);
+                
+                int pQuantity = 0;
+                String qtyStr = request.getParameter("pQuantity") != null ? request.getParameter("pQuantity") : request.getParameter("quantity");
+                if(qtyStr != null && !qtyStr.isEmpty()) pQuantity = Integer.parseInt(qtyStr);
 
-			String path = request.getServletContext().getRealPath("/") + "Images" + File.separator
-					+ part.getSubmittedFileName();
-			try {
-				FileOutputStream fos = new FileOutputStream(path);
-				InputStream is = part.getInputStream();
-				byte[] data = new byte[is.available()];
-				is.read(data);
-				fos.write(data);
-				fos.flush();
-				fos.close();
+                int catId = 0;
+                String catStr = request.getParameter("catId") != null ? request.getParameter("catId") : request.getParameter("categoryType");
+                if(catStr != null && !catStr.isEmpty()) catId = Integer.parseInt(catStr);
+                
+                Part part = request.getPart("pPic");
+                if(part == null) part = request.getPart("photo");
 
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			if (flag) {
-				message = new Message("Product added successfully!!", "success", "alert-success");
-			} else {
-				message = new Message("Something went wrong! Try again!!", "error", "alert-danger");
-			}
-			session.setAttribute("message", message);
-			response.sendRedirect("admin.jsp");
-			
-		} else if (operation.trim().equals("updateCategory")) {
+                String imgName = "default.png";
+                if(part != null) imgName = part.getSubmittedFileName();
 
-			int cid = Integer.parseInt(request.getParameter("cid"));
-			String name = request.getParameter("category_name");
-			Part part = request.getPart("category_img");
-			if (part.getSubmittedFileName().isEmpty()) {
-				String image = request.getParameter("image");
-				Category category = new Category(cid, name, image);
-				catDao.updateCategory(category);
-			} else {
-				Category category = new Category(cid, name, part.getSubmittedFileName());
-				catDao.updateCategory(category);
-				String path = request.getServletContext().getRealPath("/") + "Images" + File.separator
-						+ part.getSubmittedFileName();
-				try {
-					FileOutputStream fos = new FileOutputStream(path);
-					InputStream is = part.getInputStream();
-					byte[] data = new byte[is.available()];
-					is.read(data);
-					fos.write(data);
-					fos.flush();
-					fos.close();
+                Product product = new Product(pName, pDesc, pPrice, pDiscount, pQuantity, imgName, catId);
+                boolean flag = pdao.saveProduct(product);
 
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			message = new Message("Category updated successfully!!", "success", "alert-success");
-			session.setAttribute("message", message);
-			response.sendRedirect("display_category.jsp");
-			
-		} else if (operation.trim().equals("deleteCategory")) {
+                if(part != null && part.getSize() > 0) {
+                    String path = request.getServletContext().getRealPath("/") + "Images" + File.separator + imgName;
+                    saveFile(part.getInputStream(), path);
+                }
 
-			int cid = Integer.parseInt(request.getParameter("cid"));
-			boolean deleted = catDao.deleteCategory(cid);
-			if (deleted) {
-				message = new Message("Category deleted successfully!!", "success", "alert-success");
-			} else {
-				message = new Message("Unable to delete category. Remove dependent products or try again!", "error",
-						"alert-danger");
-			}
-			session.setAttribute("message", message);
-			response.sendRedirect("display_category.jsp");
+                if (flag) {
+                    message = new Message("Thêm sản phẩm thành công!", "success", "alert-success");
+                } else {
+                    message = new Message("Lỗi hệ thống!", "error", "alert-danger");
+                }
+                session.setAttribute("message", message);
+                response.sendRedirect("admin.jsp?page=products");
 
-		} else if (operation.trim().equals("updateProduct")) {
+            // ==========================================
+            // 3. UPDATE CATEGORY
+            // ==========================================
+            } else if (operation.trim().equals("updateCategory")) {
 
-			int pid = Integer.parseInt(request.getParameter("pid"));
-			String name = request.getParameter("name");
-			float price = Float.parseFloat(request.getParameter("price"));
-			String description = request.getParameter("description");
-			int quantity = Integer.parseInt(request.getParameter("quantity"));
-			int discount = Integer.parseInt(request.getParameter("discount"));
-			if (discount < 0 || discount > 100) {
-				discount = 0;
-			}
-			Part part = request.getPart("product_img");
-			int cid = Integer.parseInt(request.getParameter("categoryType"));
-			if (cid == 0) {
-				cid = Integer.parseInt(request.getParameter("category"));
-			}
-			if (part.getSubmittedFileName().isEmpty()) {
-				String image = request.getParameter("image");
-				Product product = new Product(pid, name, description, price, discount, quantity, image, cid);
-				pdao.updateProduct(product);
-			} else {
+                int cid = Integer.parseInt(request.getParameter("cid"));
+                String name = request.getParameter("category_name"); // Hoặc "catTitle" tùy form
+                if(name == null) name = request.getParameter("catTitle");
+                
+                Part part = request.getPart("category_img"); // Hoặc "catImage"
+                if(part == null) part = request.getPart("catImage");
+                
+                String imageName;
+                if (part != null && part.getSize() > 0) {
+                    imageName = part.getSubmittedFileName();
+                    String path = request.getServletContext().getRealPath("/") + "Images" + File.separator + imageName;
+                    saveFile(part.getInputStream(), path);
+                } else {
+                    imageName = request.getParameter("image");
+                    if(imageName == null) imageName = request.getParameter("oldImage");
+                }
+                
+                Category category = new Category(cid, name, imageName);
+                catDao.updateCategory(category);
 
-				Product product = new Product(pid, name, description, price, discount, quantity,
-						part.getSubmittedFileName(), cid);
-				pdao.updateProduct(product);
-				// product image upload
-				String path = request.getServletContext().getRealPath("/") + "Images" + File.separator
-						+ part.getSubmittedFileName();
-				try {
-					FileOutputStream fos = new FileOutputStream(path);
-					InputStream is = part.getInputStream();
-					byte[] data = new byte[is.available()];
-					is.read(data);
-					fos.write(data);
-					fos.flush();
-					fos.close();
+                message = new Message("Cập nhật danh mục thành công!", "success", "alert-success");
+                session.setAttribute("message", message);
+                response.sendRedirect("admin.jsp?page=category");
 
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			message = new Message("Product updated successfully!!", "success", "alert-success");
-			session.setAttribute("message", message);
-			response.sendRedirect("display_products.jsp");
+            // ==========================================
+            // 4. DELETE CATEGORY
+            // ==========================================
+            } else if (operation.trim().equals("deleteCategory")) {
 
-		} else if (operation.trim().equals("deleteProduct")) {
+                int cid = Integer.parseInt(request.getParameter("cid"));
+                boolean deleted = catDao.deleteCategory(cid);
+                if (deleted) {
+                    message = new Message("Xóa danh mục thành công!", "success", "alert-success");
+                } else {
+                    message = new Message("Không thể xóa! Hãy xóa sản phẩm liên quan trước.", "error", "alert-danger");
+                }
+                session.setAttribute("message", message);
+                response.sendRedirect("admin.jsp?page=category");
 
-			int pid = Integer.parseInt(request.getParameter("pid"));
-			pdao.deleteProduct(pid);
-			response.sendRedirect("display_products.jsp");
+            // ==========================================
+            // 5. UPDATE PRODUCT (FIXED NULL POINTER)
+            // ==========================================
+            } else if (operation.trim().equals("updateProduct")) {
 
-		}
-		return;
-	}
+                // Lấy ID (Bắt buộc)
+                String pidStr = request.getParameter("pid");
+                if(pidStr == null) throw new Exception("Product ID is missing");
+                int pid = Integer.parseInt(pidStr);
 
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doPost(req, resp);
-	}
+                // Lấy các thông tin khác (Form Modal mới dùng pName, pPrice...)
+                String name = request.getParameter("pName");
+                
+                // Xử lý giá (float)
+                float price = 0;
+                String pStr = request.getParameter("pPrice");
+                if (pStr != null && !pStr.trim().isEmpty()) {
+                    price = Float.parseFloat(pStr.trim());
+                }
+
+                String description = request.getParameter("pDesc");
+                String specifications = request.getParameter("specifications");
+                
+                // Xử lý số lượng
+                int quantity = 0;
+                String qStr = request.getParameter("pQuantity");
+                if (qStr != null && !qStr.trim().isEmpty()) quantity = Integer.parseInt(qStr.trim());
+
+                // Xử lý giảm giá
+                int discount = 0;
+                String dStr = request.getParameter("pDiscount");
+                if (dStr != null && !dStr.trim().isEmpty()) discount = Integer.parseInt(dStr.trim());
+
+                // Xử lý danh mục
+                int cid = 0;
+                String cStr = request.getParameter("catId");
+                if (cStr != null && !cStr.trim().isEmpty()) cid = Integer.parseInt(cStr.trim());
+                
+                // Xử lý ảnh
+                Part part = request.getPart("pPic");
+                String imageName = "";
+                
+                if (part != null && part.getSize() > 0) {
+                    imageName = part.getSubmittedFileName();
+                    String path = request.getServletContext().getRealPath("/") + "Images" + File.separator + imageName;
+                    saveFile(part.getInputStream(), path);
+                } else {
+                    imageName = request.getParameter("oldImage");
+                }
+
+                // Tạo đối tượng và update
+                Product product = new Product(pid, name, description, price, discount, quantity, imageName, cid, specifications);
+                pdao.updateProduct(product);
+
+                message = new Message("Cập nhật sản phẩm thành công!", "success", "alert-success");
+                session.setAttribute("message", message);
+                response.sendRedirect("admin.jsp?page=products");
+
+            // ==========================================
+            // 6. DELETE PRODUCT
+            // ==========================================
+            } else if (operation.trim().equals("deleteProduct")) {
+
+                int pid = Integer.parseInt(request.getParameter("pid"));
+                pdao.deleteProduct(pid);
+                
+                message = new Message("Xóa sản phẩm thành công!", "success", "alert-success");
+                session.setAttribute("message", message);
+                response.sendRedirect("admin.jsp?page=products");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            message = new Message("Lỗi hệ thống: " + e.getMessage(), "error", "alert-danger");
+            session.setAttribute("message", message);
+            // Quay về trang chủ admin nếu lỗi nặng
+            response.sendRedirect("admin.jsp");
+        }
+    }
+
+    // Hàm lưu file gọn gàng
+    private void saveFile(InputStream is, String path) throws IOException {
+        byte[] data = new byte[is.available()];
+        is.read(data);
+        try (FileOutputStream fos = new FileOutputStream(path)) {
+            fos.write(data);
+            fos.flush();
+        }
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        doPost(req, resp);
+    }
 }

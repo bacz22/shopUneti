@@ -1,252 +1,118 @@
 <%@page import="entities.Admin"%>
 <%@page import="entities.Message"%>
-<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
-	pageEncoding="ISO-8859-1"%>
+<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
 <%@page errorPage="error_exception.jsp"%>
 <%
-Admin activeAdmin = (Admin) session.getAttribute("activeAdmin");
-if (activeAdmin == null) {
-	Message message = new Message("You are not logged in! Login first!!", "error", "alert-danger");
-	session.setAttribute("message", message);
-	response.sendRedirect("adminlogin.jsp");
-	return;
-}
+    Admin activeAdmin = (Admin) session.getAttribute("activeAdmin");
+    if (activeAdmin == null) {
+        Message message = new Message("Bạn chưa đăng nhập! Vui lòng đăng nhập trước!!", "error", "alert-danger");
+        session.setAttribute("message", message);
+        response.sendRedirect("adminlogin.jsp");
+        return;
+    }
+    
+    // Lấy tham số 'page' từ URL để biết cần hiện nội dung gì
+    String pageParam = request.getParameter("page");
+    if(pageParam == null) {
+        pageParam = "dashboard"; // Mặc định là dashboard
+    }
 %>
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-<meta charset="ISO-8859-1">
-<title>Admin Page</title>
-<%@include file="Components/common_css_js.jsp"%>
-<style type="text/css">
-.cus-active {
-	background-color: #e6eefa !important;
-	width: 100%;
-}
-
-.list-btn {
-	font-size: 18px !important;
-}
-
-.list-btn:hover {
-	color: #2874f0 !important;
-}
-
-.no-border {
-	border: 0;
-	box-shadow: none;
-}
-
-a {
-	text-decoration: none;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Dashboard | UnetiShop</title>
+    <%@include file="Components/common_css_js.jsp"%>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    
+    <style>
+        :root { --sidebar-width: 260px; --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        body { background-color: #f3f4f6; font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }
+        .admin-wrapper { display: flex; min-height: 100vh; }
+        
+        /* Sidebar Styles */
+        .sidebar { width: var(--sidebar-width); background: var(--primary-gradient); color: white; position: fixed; top: 0; left: 0; height: 100vh; z-index: 1000; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 25px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 1.4rem; font-weight: 800; }
+        .admin-profile { padding: 30px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .admin-avatar { width: 80px; height: 80px; border-radius: 50%; background: white; padding: 3px; margin-bottom: 10px; }
+        .sidebar-menu { padding: 20px 0; flex-grow: 1; overflow-y: auto; }
+        .menu-item { display: flex; align-items: center; padding: 12px 25px; color: rgba(255,255,255,0.8); text-decoration: none; transition: all 0.3s; font-weight: 500; }
+        .menu-item:hover, .menu-item.active { background: rgba(255,255,255,0.1); color: white; border-left: 4px solid #fff; }
+        .menu-item i { width: 25px; margin-right: 10px; }
+        
+        /* Main Content */
+        .main-content { margin-left: var(--sidebar-width); flex-grow: 1; padding: 30px; }
+        
+        /* Stats Cards Styles (Chỉ dùng cho Dashboard) */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+        .stat-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .bg-cat { background: rgba(17, 153, 142, 0.1); color: #11998e; }
+    </style>
 </head>
 <body>
-	<!--navbar -->
-	<%@include file="Components/navbar.jsp"%>
 
-	<!--admin dashboard -->
-	<div class="container-fluid py-4 px-3">
-		<%@include file="Components/alert_message.jsp"%>
-		<div class="row">
-			<div class="container text-center" id="details">
-				<img src="Images/admin.png" style="max-width: 180px;"
-					class="img-fluid">
-				<h3>
-					Welcome "<%=activeAdmin.getName()%>"
-				</h3>
-			</div>
-		</div>
-		<div class="container">
-			<div class="row px-3 py-3">
-				<div class="col-md-4">
-					<a href="display_category.jsp">
-						<div class="card text-bg-light mb-3 text-center">
-							<div class="card-body">
-								<img src="Images/categories.png" style="max-width: 80px;"
-									class="img-fluid">
-								<h4 class="card-title mt-3">Category</h4>
-							</div>
-						</div>
-					</a>
-				</div>
-				<div class="col-md-4">
-					<a href="display_products.jsp">
-						<div class="card text-bg-light mb-3 text-center">
-							<div class="card-body">
-								<img src="Images/products.png" style="max-width: 80px;"
-									class="img-fluid">
-								<h4 class="card-title mt-3">Products</h4>
-							</div>
-						</div>
-					</a>
-				</div>
-				<div class="col-md-4">
-					<a href="display_orders.jsp">
-						<div class="card text-bg-light mb-3 text-center">
-							<div class="card-body">
-								<img src="Images/order.png" style="max-width: 80px;"
-									class="img-fluid">
-								<h4 class="card-title mt-3">Order</h4>
-							</div>
-						</div>
-					</a>
-				</div>
-			</div>
-		</div>
-		<div class="container">
-			<div class="row px-3">
-				<div class="col-md-4 offset-md-2">
-					<a href="display_users.jsp">
-						<div class="card text-bg-light mb-3 text-center">
-							<div class="card-body">
-								<img src="Images/users.png" style="max-width: 80px;"
-									class="img-fluid">
-								<h4 class="card-title mt-3">User's</h4>
-							</div>
-						</div>
-					</a>
-				</div>
-				<div class="col-md-4">
-					<a href="display_admin.jsp">
-						<div class="card text-bg-light mb-3 text-center">
-							<div class="card-body">
-								<img src="Images/add-admin.png" style="max-width: 80px;"
-									class="img-fluid">
-								<h4 class="card-title mt-3">Admin</h4>
-							</div>
-						</div>
-					</a>
-				</div>
-			</div>
-		</div>
-	</div>
-	<!--end-->
+<div class="admin-wrapper">
+    
+    <nav class="sidebar">
+        <div class="sidebar-header"><i class="fas fa-store me-2"></i> UnetiShop</div>
+        <div class="admin-profile">
+            <img src="Images/admin.png" class="admin-avatar" alt="Admin">
+            <h6 class="mb-0 mt-2"><%= activeAdmin.getName() %></h6>
+        </div>
 
-	<!-- add category modal-->
-	<div class="modal fade" id="add-category" tabindex="-1"
-		aria-labelledby="addCategoryModalLabel" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h1 class="modal-title fs-5" id="addCategoryModalLabel">Add
-						Category Here</h1>
-					<button type="button" class="btn-close" data-bs-dismiss="modal"
-						aria-label="Close"></button>
-				</div>
-				<form action="AddOperationServlet" method="post"
-					enctype="multipart/form-data">
-					<div class="modal-body">
-						<input type="hidden" name="operation" value="addCategory">
+        <div class="sidebar-menu">
+            <a href="admin.jsp?page=dashboard" class="menu-item <%= pageParam.equals("dashboard") ? "active" : "" %>">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <a href="admin.jsp?page=category" class="menu-item <%= pageParam.equals("category") ? "active" : "" %>">
+                <i class="fas fa-th-large"></i> Quản lý Danh mục
+            </a>
+            <a href="admin.jsp?page=products" class="menu-item <%= pageParam.equals("products") ? "active" : "" %>">
+                <i class="fas fa-box-open"></i> Quản lý Sản phẩm
+            </a>
+            <a href="admin.jsp?page=orders" class="menu-item <%= pageParam.equals("orders") ? "active" : "" %>">
+                <i class="fas fa-shopping-cart"></i> Quản lý Đơn hàng
+            </a>
+            <a href="admin.jsp?page=users" class="menu-item <%= pageParam.equals("users") ? "active" : "" %>">
+                <i class="fas fa-users"></i> Quản lý Người dùng
+            </a>
+        </div>
+        <div class="p-3">
+            <a href="LogoutServlet?user=admin" class="btn btn-outline-light w-100">Đăng xuất</a>
+        </div>
+    </nav>
 
-						<div class="mb-3">
-							<label class="form-label"><b>Category Name</b></label> <input
-								type="text" name="category_name"
-								placeholder="Enter category here" class="form-control" required>
-						</div>
-						<div class="mb-3">
-							<label for="formFile" class="form-label"><b>Category
-									Image</b></label> <input class="form-control" type="file"
-								name="category_img" id="formFile">
-						</div>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary"
-							data-bs-dismiss="modal">Close</button>
-						<button type="submit" class="btn btn-primary me-3">Add
-							Category</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
-	<!-- end of modal -->
+    <main class="main-content">
+        <%@include file="Components/alert_message.jsp"%>
 
-	<!-- add product modal-->
-	<div class="modal fade" id="add-product" tabindex="-1"
-		aria-labelledby="addProductModalLabel" aria-hidden="true">
-		<div class="modal-dialog modal-lg">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h1 class="modal-title fs-5" id="addProductModalLabel">Add
-						Product Here</h1>
-					<button type="button" class="btn-close" data-bs-dismiss="modal"
-						aria-label="Close"></button>
-				</div>
-				<form action="AddOperationServlet" method="post"
-					name="addProductForm" enctype="multipart/form-data">
-					<div class="modal-body">
-						<input type="hidden" name="operation" value="addProduct">
-						<div>
-							<label class="form-label"><b>Product Name</b></label> <input
-								type="text" name="name" placeholder="Enter product name"
-								class="form-control" required>
-						</div>
-						<div class="mb-2">
-							<label class="form-label"><b>Product Description</b></label>
-							<textarea class="form-control" name="description" rows="4"
-								placeholder="Enter product description"></textarea>
-						</div>
-						<div class="row">
-							<div class="col-md-6 mb-2">
-								<label class="form-label"><b>Unit Price</b></label> <input
-									type="number" name="price" placeholder="Enter price"
-									class="form-control" required>
-							</div>
-							<div class="col-md-6 mb-2">
-								<label class="form-label"><b>Discount Percentage</b></label> <input
-									type="number" name="discount" onblur="validate()"
-									placeholder="Enter discount if any!" class="form-control">
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-md-6 mb-2">
-								<label class="form-label"><b>Product Quantity</b></label> <input
-									type="number" name="quantity"
-									placeholder="Enter product quantity" class="form-control">
-							</div>
-							<div class="col-md-6 mb-2">
-								<label class="form-label"><b>Select Category Type</b></label> <select
-									name="categoryType" class="form-control">
-									<option value="0">--Select Category--</option>
-									<%
-									for (Category c : categoryList) {
-									%>
-									<option value="<%=c.getCategoryId()%>">
-										<%=c.getCategoryName()%></option>
-									<%
-									}
-									%>
-								</select>
-							</div>
-						</div>
-						<div class="mb-2">
-							<label class="form-label"><b>Product Image</b></label> <input
-								type="file" name="photo" class="form-control" required>
-						</div>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary"
-							data-bs-dismiss="modal">Close</button>
-						<button type="submit" class="btn btn-primary me-3">Add
-							Product</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
-	<!-- end of modal -->
+        <% 
+        // LOGIC ĐIỀU HƯỚNG NỘI DUNG
+        if(pageParam.equals("dashboard")) {
+        %>
+            <h4 class="mb-4 fw-bold text-secondary">Tổng quan hệ thống</h4>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div><h5>Danh mục</h5><h3>Quản lý</h3></div>
+                    <div class="stat-icon bg-cat"><i class="fas fa-th-large"></i></div>
+                </div>
+                </div>
+        
+        <% } else if(pageParam.equals("category")) { %>
+            
+            <jsp:include page="display_category.jsp" />
+            
+        <% } else if(pageParam.equals("products")) { %>
+            
+             <jsp:include page="display_products.jsp" />
+             
+        <% } else if(pageParam.equals("orders")) { %>
+             <div class="alert alert-info">Trang quản lý đơn hàng (Chưa include)</div>
+        <% } %>
 
-	<script type="text/javascript">
-		function validate() {
-			var dis = document.addProductForm.discount.value;
-			if (dis > 100 || dis < 0) {
-				alert("Discount need tobe between 0-100 !");
-				//document.addProductForm.discount.focus();
-				return false;
-			}
-		}
-	</script>
+    </main>
+</div>
+
 </body>
 </html>

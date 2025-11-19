@@ -28,8 +28,6 @@ public class UpdateUserServlet extends HttpServlet {
 			try {
 				String userAddress = request.getParameter("user_address");
 				String userCity = request.getParameter("city");
-				String userPincode = request.getParameter("pincode");
-				String userState = request.getParameter("state");
 
 				User user = new User();
 				user.setUserId(oldUser.getUserId());
@@ -41,10 +39,8 @@ public class UpdateUserServlet extends HttpServlet {
 				user.setDateTime(oldUser.getDateTime());
 				user.setUserAddress(userAddress);
 				user.setUserCity(userCity);
-				user.setUserPincode(userPincode);
-				user.setUserState(userState);
 
-				userDao.updateUserAddresss(user);
+				userDao.updateUserAddress(user);
 				session.setAttribute("activeUser", user);
 				response.sendRedirect("checkout.jsp");
 
@@ -59,11 +55,8 @@ public class UpdateUserServlet extends HttpServlet {
 				String userGender = request.getParameter("gender");
 				String userAddress = request.getParameter("address");
 				String userCity = request.getParameter("city");
-				String userPincode = request.getParameter("pincode");
-				String userState = request.getParameter("state");
 
-				User user = new User(userName, userEmail, userPhone, userGender, userAddress, userCity, userPincode,
-						userState);
+				User user = new User(userName, userEmail, userPhone, userGender, userAddress, userCity);
 				user.setUserId(oldUser.getUserId());
 				user.setUserPassword(oldUser.getUserPassword());
 				user.setDateTime(oldUser.getDateTime());

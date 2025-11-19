@@ -13,15 +13,13 @@ public class User {
 	private Timestamp dateTime;
 	private String userAddress;
 	private String userCity;
-	private String userPincode;
-	private String userState;
-	
+
 	public User() {
 		
 	}
 
 	public User(String userName, String userEmail, String userPassword, String userPhone, String userGender,
-			String userAddress, String userCity, String userPincode, String userState) {
+			String userAddress, String userCity) {
 		super();
 		this.userName = userName;
 		this.userEmail = userEmail;
@@ -30,12 +28,11 @@ public class User {
 		this.userGender = userGender;
 		this.userAddress = userAddress;
 		this.userCity = userCity;
-		this.userPincode = userPincode;
-		this.userState = userState;
+
 	}
 
 	public User(String userName, String userEmail, String userPassword, String userPhone, String userGender,
-			Timestamp dateTime, String userAddress, String userCity, String userPincode, String userState) {
+			Timestamp dateTime, String userAddress, String userCity) {
 		super();
 		this.userName = userName;
 		this.userEmail = userEmail;
@@ -45,12 +42,11 @@ public class User {
 		this.dateTime = dateTime;
 		this.userAddress = userAddress;
 		this.userCity = userCity;
-		this.userPincode = userPincode;
-		this.userState = userState;
+
 	}
 	
 	public User(String userName, String userEmail, String userPhone, String userGender, String userAddress,
-			String userCity, String userPincode, String userState) {
+			String userCity) {
 		super();
 		this.userName = userName;
 		this.userEmail = userEmail;
@@ -58,8 +54,7 @@ public class User {
 		this.userGender = userGender;
 		this.userAddress = userAddress;
 		this.userCity = userCity;
-		this.userPincode = userPincode;
-		this.userState = userState;
+
 	}
 
 	public int getUserId() {
@@ -134,20 +129,6 @@ public class User {
 		this.userCity = userCity;
 	}
 
-	public String getUserPincode() {
-		return userPincode;
-	}
 
-	public void setUserPincode(String userPincode) {
-		this.userPincode = userPincode;
-	}
-
-	public String getUserState() {
-		return userState;
-	}
-
-	public void setUserState(String userState) {
-		this.userState = userState;
-	}
 	
 }

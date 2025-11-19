@@ -2,8 +2,8 @@
 <%@page import="entities.Message"%>
 <%@page import="dao.UserDao"%>
 <%@page errorPage="error_exception.jsp"%>
-<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
-	pageEncoding="ISO-8859-1"%>
+<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
+  <meta charset="UTF-8">
 <%@page import="entities.OrderedProduct"%>
 <%@page import="entities.Order"%>
 <%@page import="java.util.List"%>
@@ -27,7 +27,7 @@ UserDao userDao = new UserDao(ConnectionProvider.getConnection());
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="ISO-8859-1">
+<meta charset="UTF-8">
 <title>View Order's</title>
 <%@include file="Components/common_css_js.jsp"%>
 </head>
@@ -70,7 +70,7 @@ UserDao userDao = new UserDao(ConnectionProvider.getConnection());
 					method="post">
 				<tr>
 					<td class="text-center"><img
-						src="Product_imgs\<%=orderProduct.getImage()%>"
+						src="Images/<%=orderProduct.getImage()%>"
 						style="width: 50px; height: 50px; width: auto;"></td>
 					<td><%=order.getOrderId()%></td>
 					<td><%=orderProduct.getName()%><br>Quantity: <%=orderProduct.getQuantity()%><br>Total

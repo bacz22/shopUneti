@@ -20,25 +20,51 @@ public class AddToCartServlet extends HttpServlet {
 		// TODO Auto-generated method stub
 		int uid = Integer.parseInt(req.getParameter("uid"));
 		int pid = Integer.parseInt(req.getParameter("pid"));
+		// Đọc số lượng từ request (số lượng người dùng chọn)
+		int requestedQty = 1;
+		try {
+			String qtyParam = req.getParameter("quantity");
+			if (qtyParam != null && !qtyParam.trim().isEmpty()) {
+				requestedQty = Integer.parseInt(qtyParam);
+				if (requestedQty < 1) requestedQty = 1;
+			}
+		} catch (NumberFormatException e) {
+			requestedQty = 1;
+		}
 
 		CartDao cartDao = new CartDao(ConnectionProvider.getConnection());
-		int qty = cartDao.getQuantity(uid, pid);
+		ProductDao productDao = new ProductDao(ConnectionProvider.getConnection());
+		
+		// Kiểm tra số lượng trong kho (chỉ kiểm tra, không trừ)
+		int stockQty = productDao.getProductQuantityById(pid);
+		int currentCartQty = cartDao.getQuantity(uid, pid);
 		HttpSession session = req.getSession();
 		Message message = null;
 		
-		if (qty == 0) {
-			Cart cart = new Cart(uid, pid, qty + 1);
-			cartDao.addToCart(cart);
-			message = new Message("Product is added to cart successfully!", "success", "alert-success");
-			
-		}else {
-			int cid = cartDao.getIdByUserIdAndProductId(uid, pid);
-			cartDao.updateQuantity(cid, qty+1);
-			message = new Message("Product quantity is increased!", "success", "alert-success");
+		// Kiểm tra số lượng có đủ không
+		if (requestedQty > stockQty) {
+			message = new Message("Số lượng sản phẩm trong kho không đủ! Còn " + stockQty + " sản phẩm.", "error", "alert-danger");
+		} else {
+			// Kiểm tra tổng số lượng trong giỏ + số lượng mới có vượt quá kho không
+			int totalQtyInCart = currentCartQty + requestedQty;
+			if (totalQtyInCart > stockQty) {
+				message = new Message("Số lượng trong giỏ đã đạt tối đa! Còn " + stockQty + " sản phẩm trong kho.", "error", "alert-danger");
+			} else {
+				if (currentCartQty == 0) {
+					// Sản phẩm chưa có trong giỏ, thêm mới với số lượng đã chọn
+					Cart cart = new Cart(uid, pid, requestedQty);
+					cartDao.addToCart(cart);
+					message = new Message("Product is added to cart successfully!", "success", "alert-success");
+					
+				} else {
+					// Sản phẩm đã có trong giỏ, cập nhật số lượng (cộng thêm số lượng mới)
+					int cid = cartDao.getIdByUserIdAndProductId(uid, pid);
+					cartDao.updateQuantity(cid, totalQtyInCart);
+					message = new Message("Product quantity is increased!", "success", "alert-success");
+				}
+			}
 		}
-		//updating quantity of product in database
-		ProductDao productDao = new ProductDao(ConnectionProvider.getConnection());
-		productDao.updateQuantity(pid, productDao.getProductQuantityById(pid) - 1);
+		
 		session.setAttribute("message", message);
 		resp.sendRedirect("viewProduct.jsp?pid="+pid);
 	}

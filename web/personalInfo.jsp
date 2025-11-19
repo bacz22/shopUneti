@@ -1,155 +1,237 @@
 <%@page import="entities.Message"%>
 <%@page import="entities.User"%>
+<%@page errorPage="error_exception.jsp"%>
 <%
 User user1 = (User) session.getAttribute("activeUser");
-if (user1 == null) {
-	Message message = new Message("You are not logged in! Login first!!", "error", "alert-danger");
-	session.setAttribute("message", message);
-	response.sendRedirect("login.jsp");
-	return;
-}
 %>
-
+<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
+  <meta charset="UTF-8">
 <style>
-label {
-	font-weight: bold;
-}
+    label { font-weight: 600; color: #2d3748; }
+    .form-control, .form-select {
+        border-radius: 12px; padding: 11px 14px; border: 1.5px solid #e2e8f5;
+        transition: all 0.2s ease;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea; box-shadow: 0 0 0 0.2rem rgba(102,126,234,0.2);
+    }
+    .btn-primary-custom {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none; border-radius: 12px; padding: 10px 30px;
+        font-weight: 600; color: white; transition: all 0.3s ease;
+    }
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102,126,234,0.3);
+    }
+    .btn-change-pass {
+        background: rgba(102,126,234,0.12); color: #667eea;
+        border: 2px dashed #667eea; border-radius: 16px;
+        padding: 10px 20px; font-weight: 600; height: 48px;
+        transition: all 0.3s ease;
+    }
+    .btn-change-pass:hover {
+        background: rgba(102,126,234,0.2); transform: translateY(-2px);
+    }
+    .section-title {
+        color: #667eea; font-weight: 700; font-size: 1.4rem;
+        margin-bottom: 1.5rem; padding-bottom: 10px;
+        border-bottom: 2px solid #e2e8f5;
+    }
+    .password-toggle { cursor: pointer; color: #667eea; }
+
+    /* POPUP */
+    .popup-overlay {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;
+    }
+    .popup-content {
+        background: white; border-radius: 20px; width: 90%; max-width: 500px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2); transform: scale(0.8);
+        opacity: 0; transition: all 0.3s ease;
+    }
+    .popup-overlay.show {
+        display: flex;
+    }
+    .popup-overlay.show .popup-content {
+        transform: scale(1); opacity: 1;
+    }
+    .popup-header {
+        padding: 20px 24px 10px; text-align: center;
+        border-bottom: 1px solid #eee;
+    }
+    .popup-close {
+        position: absolute; top: 12px; right: 16px;
+        background: none; border: none; font-size: 1.5rem; color: #999;
+        cursor: pointer;
+    }
+    .popup-body { padding: 24px; }
 </style>
-<div class="container px-3 py-3">
-	<h3>Personal Information</h3>
-	<form id="update-user" action="UpdateUserServlet" method="post">
-		<input type="hidden" name="operation" value="updateUser">
-		<div class="row">
-			<div class="col-md-6 mt-2">
-				<label class="form-label">Your name</label> <input type="text"
-					name="name" class="form-control" placeholder="First and last name"
-					value="<%=user1.getUserName()%>">
-			</div>
-			<div class="col-md-6 mt-2">
-				<label class="form-label">Email</label> <input type="email"
-					name="email" placeholder="Email address" class="form-control"
-					value="<%=user1.getUserEmail()%>">
-			</div>
-		</div>
-		<div class="row">
-			<div class="col-md-6 mt-2">
-				<label class="form-label">Mobile number</label> <input type="number"
-					name="mobile_no" placeholder="Mobile number" class="form-control"
-					value="<%=user1.getUserPhone()%>">
-			</div>
-			<div class="col-md-6 mt-5">
-				<label class="form-label pe-3">Gender</label>
-				<%
-				String gender = user1.getUserGender();
-				if (gender.trim().equals("Male")) {
-				%>
-				<input class="form-check-input" type="radio" name="gender"
-					value="Male" checked> <span
-					class="form-check-label pe-3 ps-1"> Male </span> <input
-					class="form-check-input" type="radio" name="gender" value="Female">
-				<span class="form-check-label ps-1"> Female </span>
 
-				<%
-				} else {
-				%>
-				<input class="form-check-input" type="radio" name="gender"
-					value="Male"> <span class="form-check-label pe-3 ps-1">
-					Male </span> <input class="form-check-input" type="radio" name="gender"
-					value="Female" checked> <span class="form-check-label ps-1">
-					Female </span>
-				<%
-				}
-				%>
+<div class="container px-4 py-4">
 
-			</div>
-		</div>
-		<div class="mt-2">
-			<label class="form-label">Address</label> <input type="text"
-				name="address" placeholder="Enter Address(Area and Street))"
-				class="form-control" value="<%=user1.getUserAddress()%>">
-		</div>
-		<div class="row">
-			<div class="col-md-6 mt-2">
-				<label class="form-label">City</label> <input class="form-control"
-					type="text" name="city" placeholder="City/District/Town"
-					value="<%=user1.getUserCity()%>">
-			</div>
-			<div class="col-md-6 mt-2">
-				<label class="form-label">Pincode</label> <input
-					class="form-control" type="number" name="pincode"
-					placeholder="Pincode" maxlength="6"
-					value="<%=user1.getUserPincode()%>">
-			</div>
-		</div>
-		<div class="row mt-2">
-			<label class="form-label">State</label>
-			<div class="input-group mb-3">
-				<input class="form-control" type="text"
-					value="<%=user1.getUserState()%>">
-					 <select name="state"
-					id="state-list" class="form-select">
-					<option selected>--Select State--</option>
-					<option value="Andaman &amp; Nicobar Islands">Andaman
-						&amp; Nicobar Islands</option>
-					<option value="Andhra Pradesh">Andhra Pradesh</option>
-					<option value="Arunachal Pradesh">Arunachal Pradesh</option>
-					<option value="Assam">Assam</option>
-					<option value="Bihar">Bihar</option>
-					<option value="Chandigarh">Chandigarh</option>
-					<option value="Chhattisgarh">Chhattisgarh</option>
-					<option value="Dadra &amp; Nagar Haveli &amp; Daman &amp; Diu">Dadra
-						&amp; Nagar Haveli &amp; Daman &amp; Diu</option>
-					<option value="Delhi">Delhi</option>
-					<option value="Goa">Goa</option>
-					<option value="Gujarat">Gujarat</option>
-					<option value="Haryana">Haryana</option>
-					<option value="Himachal Pradesh">Himachal Pradesh</option>
-					<option value="Jammu &amp; Kashmir">Jammu &amp; Kashmir</option>
-					<option value="Jharkhand">Jharkhand</option>
-					<option value="Karnataka">Karnataka</option>
-					<option value="Kerala">Kerala</option>
-					<option value="Ladakh">Ladakh</option>
-					<option value="Lakshadweep">Lakshadweep</option>
-					<option value="Madhya Pradesh">Madhya Pradesh</option>
-					<option value="Maharashtra">Maharashtra</option>
-					<option value="Manipur">Manipur</option>
-					<option value="Meghalaya">Meghalaya</option>
-					<option value="Mizoram">Mizoram</option>
-					<option value="Nagaland">Nagaland</option>
-					<option value="Odisha">Odisha</option>
-					<option value="Puducherry">Puducherry</option>
-					<option value="Punjab">Punjab</option>
-					<option value="Rajasthan">Rajasthan</option>
-					<option value="Sikkim">Sikkim</option>
-					<option value="Tamil Nadu">Tamil Nadu</option>
-					<option value="Telangana">Telangana</option>
-					<option value="Tripura">Tripura</option>
-					<option value="Uttarakhand">Uttarakhand</option>
-					<option value="Uttar Pradesh">Uttar Pradesh</option>
-					<option value="West Bengal">West Bengal</option>
-				</select>
-			</div>
-		</div>
-		<div id="submit-btn" class="container text-center mt-3">
-			<button type="submit" class="btn btn-outline-primary me-3">Update</button>
-			<button type="reset" class="btn btn-outline-primary">Reset</button>
-		</div>
-	</form>
+    <!-- Thông tin cá nhân -->
+    <h3 class="section-title">Thông tin cá nhân</h3>
+
+    <form id="update-user" action="UpdateUserServlet" method="post" class="mb-5">
+        <input type="hidden" name="operation" value="updateUser">
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label class="form-label">Họ và tên</label>
+                <input type="text" name="name" class="form-control"
+                       value="<%=user1.getUserName()%>" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control"
+                       value="<%=user1.getUserEmail()%>" required>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Số điện thoại</label>
+                <input type="text" name="mobile_no" class="form-control"
+                       value="<%=user1.getUserPhone() != null ? user1.getUserPhone() : ""%>">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label d-block">Giới tính</label>
+                <div class="mt-2">
+                    <input class="form-check-input" type="radio" name="gender" value="Male"
+                           <%= "Male".equals(user1.getUserGender()) ? "checked" : "" %>>
+                    <label class="form-check-label me-4">Nam</label>
+
+                    <input class="form-check-input" type="radio" name="gender" value="Female"
+                           <%= "Female".equals(user1.getUserGender()) ? "checked" : "" %>>
+                    <label class="form-check-label">Nữ</label>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">Địa chỉ</label>
+                <input type="text" name="address" class="form-control"
+                       placeholder="Số nhà, đường, phường/xã..."
+                       value="<%=user1.getUserAddress() != null ? user1.getUserAddress() : ""%>">
+            </div>
+
+            <!-- Dòng ngang nhau: Thành phố + Nút Đổi mật khẩu -->
+            <div class="col-md-6">
+                <label class="form-label">Thành phố / Tỉnh</label>
+                <input type="text" name="city" class="form-control"
+                       value="<%=user1.getUserCity() != null ? user1.getUserCity() : ""%>">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label d-block">&nbsp;</label> 
+                <button type="button" id="openPopup" class="btn btn-change-pass w-100">
+                    <i class="fas fa-key me-2"></i> Đổi mật khẩu
+                </button>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary-custom me-3">
+                Cập nhật thông tin
+            </button>
+            <button type="reset" class="btn btn-outline-secondary px-4" style="border-radius: 12px;">
+                Nhập lại
+            </button>
+        </div>
+    </form>
 </div>
 
+<!-- POPUP ĐỔI MẬT KHẨU -->
+<div class="popup-overlay" id="passwordPopup">
+    <div class="popup-content">
+        <div class="popup-header position-relative">
+            <h4 class="mb-0" style="color: #667eea; font-weight: 700;">
+                Đổi mật khẩu
+            </h4>
+            <button type="button" class="popup-close" id="closePopup">&times;</button>
+        </div>
 
+        <div class="popup-body">
+            <form action="ChangePasswordServlet" method="post" id="changePassForm">
+                <div class="mb-3">
+                    <label class="form-label">Mật khẩu hiện tại</label>
+                    <div class="input-group">
+                        <input type="password" name="current_password" class="form-control" required>
+                        <span class="input-group-text password-toggle">
+                            <i class="fas fa-eye"></i>
+                        </span>
+                    </div>
+                </div>
 
+                <div class="mb-3">
+                    <label class="form-label">Mật khẩu mới</label>
+                    <div class="input-group">
+                        <input type="password" name="new_password" class="form-control" required minlength="6">
+                        <span class="input-group-text password-toggle">
+                            <i class="fas fa-eye"></i>
+                        </span>
+                    </div>
+                </div>
 
+                <div class="mb-3">
+                    <label class="form-label">Xác nhận mật khẩu mới</label>
+                    <div class="input-group">
+                        <input type="password" name="confirm_password" class="form-control" required>
+                        <span class="input-group-text password-toggle">
+                            <i class="fas fa-eye"></i>
+                        </span>
+                    </div>
+                    <small class="text-muted">Mật khẩu phải có ít nhất 6 ký tự</small>
+                </div>
 
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary-custom me-3">
+                        Xác nhận đổi
+                    </button>
+                    <button type="button" id="cancelPopup" class="btn btn-outline-secondary px-4" style="border-radius: 12px;">
+                        Hủy bỏ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
+<script>
+    const popup = document.getElementById('passwordPopup');
+    const openBtn = document.getElementById('openPopup');
+    const closeBtn = document.getElementById('closePopup');
+    const cancelBtn = document.getElementById('cancelPopup');
 
+    openBtn.onclick = () => popup.classList.add('show');
+    closeBtn.onclick = cancelBtn.onclick = () => popup.classList.remove('show');
 
+    // Đóng khi bấm ngoài popup
+    popup.addEventListener('click', (e) => {
+        if (e.target === popup) popup.classList.remove('show');
+    });
 
+    // Hiện/ẩn mật khẩu
+    document.querySelectorAll('.password-toggle').forEach(toggle => {
+        toggle.addEventListener('click', function () {
+            const input = this.parentElement.querySelector('input');
+            if (input.type === 'password') {
+                input.type = 'text';
+                this.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                input.type = 'password';
+                this.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        });
+    });
 
-
-
-
-
-
-
-
+    // Kiểm tra xác nhận mật khẩu
+    document.getElementById('changePassForm').addEventListener('submit', function(e) {
+        const newPass = this.new_password.value;
+        const confirmPass = this.confirm_password.value;
+        if (newPass !== confirmPass) {
+            e.preventDefault();
+            alert("Mật khẩu xác nhận không khớp!");
+            this.confirm_password.focus();
+        }
+    });
+</script>

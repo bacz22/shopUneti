@@ -1,10 +1,10 @@
-<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
-	pageEncoding="ISO-8859-1"%>
+<%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
+  <meta charset="UTF-8">
 <%@page isErrorPage="true"%>
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="ISO-8859-1">
+<meta charset="UTF-8">
 <title>Something went wrong</title>
 <%@include file="Components/common_css_js.jsp"%>
 </head>

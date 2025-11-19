@@ -10,23 +10,25 @@ public class Product {
     private int productQunatity;
     private String productImages;
     private int categoryId;
+    private String specifications;
     
 	public Product() {
 		super();
 	}
-	
-	public Product(int productId, String productName, String productDescription, float productPrice,
-			int productDiscount, int productQunatity, String productImages, int categoryId) {
-		super();
-		this.productId = productId;
-		this.productName = productName;
-		this.productDescription = productDescription;
-		this.productPrice = productPrice;
-		this.productDiscount = productDiscount;
-		this.productQunatity = productQunatity;
-		this.productImages = productImages;
-		this.categoryId = categoryId;
-	}
+        
+        public Product(int productId, String productName, String productDescription, float productPrice,
+               int productDiscount, int productQunatity, String productImages, 
+               int categoryId, String specifications) {
+                    this.productId = productId;
+                    this.productName = productName;
+                    this.productDescription = productDescription;
+                    this.productPrice = productPrice;
+                    this.productDiscount = productDiscount;
+                    this.productQunatity = productQunatity;
+                    this.productImages = productImages;
+                    this.categoryId = categoryId;
+                    this.specifications = specifications;
+        }
 
 	public Product(String productName, String productDescription, float productPrice, int productDiscount,
 			int productQunatity, String productImages) {
@@ -123,6 +125,15 @@ public class Product {
 	public void setCategoryId(int categoryId) {
 		this.categoryId = categoryId;
 	}
+
+        public String getSpecifications() {
+            return specifications;
+        }
+
+        public void setSpecifications(String specifications) {
+            this.specifications = specifications;
+        }
+        
 
 	//calculate price of product by applying discount
     public int getProductPriceAfterDiscount(){

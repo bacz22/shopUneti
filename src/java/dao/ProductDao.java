@@ -17,26 +17,27 @@ public class ProductDao {
 	}
 
 	public boolean saveProduct(Product product) {
-		boolean flag = false;
-		try {
-			String query = "insert into product(name, description, price, quantity, discount, image, cid) values(?, ?, ?, ?, ?, ?, ?)";
-			PreparedStatement psmt = this.con.prepareStatement(query);
-			psmt.setString(1, product.getProductName());
-			psmt.setString(2, product.getProductDescription());
-			psmt.setFloat(3, product.getProductPrice());
-			psmt.setInt(4, product.getProductQunatity());
-			psmt.setInt(5, product.getProductDiscount());
-			psmt.setString(6, product.getProductImages());
-			psmt.setInt(7, product.getCategoryId());
+            boolean flag = false;
+            try {
+                String query = "INSERT INTO product(name, description, specifications, price, quantity, discount, image, cid) " +
+                               "VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
+                PreparedStatement psmt = this.con.prepareStatement(query);
+                psmt.setString(1, product.getProductName());
+                psmt.setString(2, product.getProductDescription());
+                psmt.setString(3, product.getSpecifications());        // Thêm specifications
+                psmt.setFloat(4, product.getProductPrice());
+                psmt.setInt(5, product.getProductQunatity());
+                psmt.setInt(6, product.getProductDiscount());
+                psmt.setString(7, product.getProductImages());
+                psmt.setInt(8, product.getCategoryId());
 
-			psmt.executeUpdate();
-			flag = true;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return flag;
-	}
+                psmt.executeUpdate();
+                flag = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return flag;
+        }
 
 	public List<Product> getAllProducts() {
 		List<Product> list = new ArrayList<Product>();
@@ -45,19 +46,19 @@ public class ProductDao {
 			Statement statement = this.con.createStatement();
 
 			ResultSet rs = statement.executeQuery(query);
-			while (rs.next()) {
-				Product product = new Product();
-				product.setProductId(rs.getInt("pid"));
-				product.setProductName(rs.getString("name"));
-				product.setProductDescription(rs.getString("description"));
-				product.setProductPrice(rs.getFloat("price"));
-				product.setProductQunatity(rs.getInt("quantity"));
-				product.setProductDiscount(rs.getInt("discount"));
-				product.setProductImages(rs.getString("image"));
-				product.setCategoryId(rs.getInt("cid"));
-
-				list.add(product);
-			}
+                        while (rs.next()) {
+                            Product product = new Product();
+                            product.setProductId(rs.getInt("pid"));
+                            product.setProductName(rs.getString("name"));
+                            product.setProductDescription(rs.getString("description"));
+                            product.setSpecifications(rs.getString("specifications"));  // Thêm dòng này
+                            product.setProductPrice(rs.getFloat("price"));
+                            product.setProductQunatity(rs.getInt("quantity"));
+                            product.setProductDiscount(rs.getInt("discount"));
+                            product.setProductImages(rs.getString("image"));
+                            product.setCategoryId(rs.getInt("cid"));
+                            list.add(product);
+                        }
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -76,6 +77,7 @@ public class ProductDao {
 				product.setProductId(rs.getInt("pid"));
 				product.setProductName(rs.getString("name"));
 				product.setProductDescription(rs.getString("description"));
+                                product.setSpecifications(rs.getString("specifications"));
 				product.setProductPrice(rs.getFloat("price"));
 				product.setProductQunatity(rs.getInt("quantity"));
 				product.setProductDiscount(rs.getInt("discount"));
@@ -102,6 +104,7 @@ public class ProductDao {
 			product.setProductId(rs.getInt("pid"));
 			product.setProductName(rs.getString("name"));
 			product.setProductDescription(rs.getString("description"));
+                        product.setSpecifications(rs.getString("specifications"));
 			product.setProductPrice(rs.getFloat("price"));
 			product.setProductQunatity(rs.getInt("quantity"));
 			product.setProductDiscount(rs.getInt("discount"));
@@ -126,6 +129,7 @@ public class ProductDao {
 				product.setProductId(rs.getInt("pid"));
 				product.setProductName(rs.getString("name"));
 				product.setProductDescription(rs.getString("description"));
+                                product.setSpecifications(rs.getString("specifications"));
 				product.setProductPrice(rs.getFloat("price"));
 				product.setProductQunatity(rs.getInt("quantity"));
 				product.setProductDiscount(rs.getInt("discount"));
@@ -155,6 +159,7 @@ public class ProductDao {
 				product.setProductId(rs.getInt("pid"));
 				product.setProductName(rs.getString("name"));
 				product.setProductDescription(rs.getString("description"));
+                                product.setSpecifications(rs.getString("specifications"));
 				product.setProductPrice(rs.getFloat("price"));
 				product.setProductQunatity(rs.getInt("quantity"));
 				product.setProductDiscount(rs.getInt("discount"));
@@ -180,6 +185,7 @@ public class ProductDao {
 				product.setProductId(rs.getInt("pid"));
 				product.setProductName(rs.getString("name"));
 				product.setProductDescription(rs.getString("description"));
+                                product.setSpecifications(rs.getString("specifications"));
 				product.setProductPrice(rs.getFloat("price"));
 				product.setProductQunatity(rs.getInt("quantity"));
 				product.setProductDiscount(rs.getInt("discount"));
@@ -195,24 +201,24 @@ public class ProductDao {
 	}
 
 	public void updateProduct(Product product) {
-		try {
+            try {
+                String query = "UPDATE product SET name=?, description=?, specifications=?, price=?, quantity=?, discount=?, image=?, cid=? WHERE pid=?";
+                PreparedStatement psmt = this.con.prepareStatement(query);
+                psmt.setString(1, product.getProductName());
+                psmt.setString(2, product.getProductDescription());
+                psmt.setString(3, product.getSpecifications());        // Thêm specifications
+                psmt.setFloat(4, product.getProductPrice());
+                psmt.setInt(5, product.getProductQunatity());
+                psmt.setInt(6, product.getProductDiscount());
+                psmt.setString(7, product.getProductImages());
+                psmt.setInt(8, product.getCategoryId());
+                psmt.setInt(9, product.getProductId());
 
-			String query = "update product set name=?, description=?, price=?, quantity=?, discount=?, image=? where pid=?";
-			PreparedStatement psmt = this.con.prepareStatement(query);
-			psmt.setString(1, product.getProductName());
-			psmt.setString(2, product.getProductDescription());
-			psmt.setFloat(3, product.getProductPrice());
-			psmt.setInt(4, product.getProductQunatity());
-			psmt.setInt(5, product.getProductDiscount());
-			psmt.setString(6, product.getProductImages());
-			psmt.setInt(7, product.getProductId());
-
-			psmt.executeUpdate();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-	}
+                psmt.executeUpdate();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
 	public void updateQuantity(int id, int qty) {
 		try {
