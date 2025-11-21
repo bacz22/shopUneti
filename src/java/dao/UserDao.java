@@ -279,6 +279,34 @@ public boolean isEmailExist(String email) {
     }
     return exists;
 }
+// THÊM HÀM NÀY ĐỂ ĐĂNG NHẬP CHÍNH XÁC
+    public User getUserByEmailAndPassword(String email, String password) {
+        User user = null;
+        String query = "SELECT * FROM user WHERE email = ? AND password = ?";
+
+        try (PreparedStatement ps = con.prepareStatement(query)) {
+            ps.setString(1, email);
+            ps.setString(2, password);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    user = new User();
+                    user.setUserId(rs.getInt("userid"));
+                    user.setUserName(rs.getString("name"));
+                    user.setUserEmail(rs.getString("email"));
+                    user.setUserPassword(rs.getString("password"));
+                    user.setUserPhone(rs.getString("phone"));
+                    user.setUserGender(rs.getString("gender"));
+                    user.setUserAddress(rs.getString("address"));
+                    user.setUserCity(rs.getString("city"));
+                    user.setDateTime(rs.getTimestamp("registerdate"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return user;
+    }
 
 // Kiểm tra số điện thoại đã tồn tại chưa
 public boolean isPhoneExist(String phone) {

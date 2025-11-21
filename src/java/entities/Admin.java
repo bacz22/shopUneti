@@ -18,6 +18,13 @@ public class Admin {
 		this.phone = phone;
 		this.password = password;
 	}
+        public Admin(int id, String name, String email, String password, String phone) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.phone = phone;
+    }
 
 	public int getId() {
 		return id;

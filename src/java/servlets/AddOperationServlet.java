@@ -228,7 +228,41 @@ public class AddOperationServlet extends HttpServlet {
                 message = new Message("Xóa sản phẩm thành công!", "success", "alert-success");
                 session.setAttribute("message", message);
                 response.sendRedirect("admin.jsp?page=products");
+            // ==========================================
+        // 7. CẬP NHẬT PROFILE ADMIN (UPDATE ADMIN)
+        // ==========================================
+        } else if (operation.trim().equals("updateAdmin")) {
+            
+            try {
+                int id = Integer.parseInt(request.getParameter("aid"));
+                String name = request.getParameter("name");
+                String email = request.getParameter("email");
+                String phone = request.getParameter("phone");
+                String password = request.getParameter("password");
+
+                // Tạo đối tượng Admin mới với thông tin cập nhật
+                // (Lưu ý: Bạn cần kiểm tra Constructor của class Admin xem thứ tự tham số đúng chưa)
+                entities.Admin admin = new entities.Admin(id, name, email, password, phone);
+                
+                // Gọi DAO update
+                dao.AdminDao adminDao = new dao.AdminDao(ConnectionProvider.getConnection());
+                boolean ans = adminDao.updateAdmin(admin);
+
+                if (ans) {
+                    message = new Message("Cập nhật hồ sơ thành công!", "success", "alert-success");
+                    // QUAN TRỌNG: Cập nhật lại session để hiển thị thông tin mới ngay lập tức
+                    session.setAttribute("activeAdmin", admin);
+                } else {
+                    message = new Message("Lỗi cập nhật! Vui lòng thử lại.", "error", "alert-danger");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                message = new Message("Lỗi hệ thống: " + e.getMessage(), "error", "alert-danger");
             }
+            
+            session.setAttribute("message", message);
+            response.sendRedirect("admin.jsp?page=profile");
+        }
 
         } catch (Exception e) {
             e.printStackTrace();

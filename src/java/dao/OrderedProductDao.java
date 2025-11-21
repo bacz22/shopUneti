@@ -17,22 +17,26 @@ public class OrderedProductDao {
 		this.con = con;
 	}
 	
-	public void insertOrderedProduct(OrderedProduct ordProduct) {
-		try {
-			String query = "insert into ordered_product(name, quantity, price, image, orderid) values(?, ?, ?, ?, ?)";
-			PreparedStatement psmt = this.con.prepareStatement(query);
-			psmt.setString(1, ordProduct.getName());
-			psmt.setInt(2, ordProduct.getQuantity());
-			psmt.setFloat(3,ordProduct.getPrice());
-			psmt.setString(4, ordProduct.getImage());
-			psmt.setInt(5, ordProduct.getOrderId());
+	public boolean insertOrderedProduct(OrderedProduct order) {
+    boolean f = false;
+    try {
+        // THÊM CỘT pid VÀO CÂU LỆNH INSERT
+        String sql = "INSERT INTO ordered_product(name, quantity, price, image, orderid, pid) VALUES(?,?,?,?,?,?)";
+        PreparedStatement ps = this.con.prepareStatement(sql);
+        ps.setString(1, order.getName());
+        ps.setInt(2, order.getQuantity());
+        ps.setDouble(3, order.getPrice());
+        ps.setString(4, order.getImage());
+        ps.setInt(5, order.getOrderId());
+        ps.setInt(6, order.getProductId()); // Lưu PID vào đây
 
-			psmt.executeUpdate();
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
+        ps.executeUpdate();
+        f = true;
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return f;
+}
 	public List<OrderedProduct> getAllOrderedProduct(int oid){
 		List<OrderedProduct> list = new ArrayList<OrderedProduct>();
 		try {

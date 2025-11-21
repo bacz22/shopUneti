@@ -1,9 +1,9 @@
+<%@page import="java.text.SimpleDateFormat"%>
 <%@page import="entities.Admin"%>
 <%@page import="entities.Message"%>
 <%@page import="dao.UserDao"%>
 <%@page errorPage="error_exception.jsp"%>
 <%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
-  <meta charset="UTF-8">
 <%@page import="entities.OrderedProduct"%>
 <%@page import="entities.Order"%>
 <%@page import="java.util.List"%>
@@ -12,105 +12,212 @@
 <%@page import="helper.ConnectionProvider"%>
 
 <%
-Admin activeAdmin = (Admin) session.getAttribute("activeAdmin");
-if (activeAdmin == null) {
-	Message message = new Message("You are not logged in! Login first!!", "error", "alert-danger");
-	session.setAttribute("message", message);
-	response.sendRedirect("adminlogin.jsp");
-	return;
-}
-OrderDao orderDao = new OrderDao(ConnectionProvider.getConnection());
-OrderedProductDao ordProdDao = new OrderedProductDao(ConnectionProvider.getConnection());
-List<Order> orderList = orderDao.getAllOrder();
-UserDao userDao = new UserDao(ConnectionProvider.getConnection());
+    // 1. Khởi tạo DAO & Lấy dữ liệu
+    OrderDao orderDao = new OrderDao(ConnectionProvider.getConnection());
+    OrderedProductDao ordProdDao = new OrderedProductDao(ConnectionProvider.getConnection());
+    UserDao userDao = new UserDao(ConnectionProvider.getConnection());
+    
+    List<Order> fullList = orderDao.getAllOrder();
+
+    // 2. Xử lý Phân trang (8 item/trang)
+    int itemsPerPage = 8;
+    int totalItems = (fullList != null) ? fullList.size() : 0;
+    int totalPages = (int) Math.ceil((double) totalItems / itemsPerPage);
+    
+    int currentPage = 1;
+    String pageParam = request.getParameter("p");
+    if (pageParam != null) {
+        try { currentPage = Integer.parseInt(pageParam); } catch (Exception e) {}
+    }
+    if (currentPage < 1) currentPage = 1;
+    if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+
+    int startIdx = (currentPage - 1) * itemsPerPage;
+    int endIdx = Math.min(startIdx + itemsPerPage, totalItems);
+    
+    List<Order> pagedList = null;
+    if(totalItems > 0) {
+        pagedList = fullList.subList(startIdx, endIdx);
+    }
+    
+    // Format
+    java.text.NumberFormat currencyFormat = java.text.NumberFormat.getInstance(new java.util.Locale("vi", "VN"));
+    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 %>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>View Order's</title>
-<%@include file="Components/common_css_js.jsp"%>
-</head>
-<body>
-	<!--navbar -->
-	<%@include file="Components/navbar.jsp"%>
 
-	<!-- order details -->
+<style>
+    /* Custom Pagination */
+    .pagination-custom .page-item { margin: 0 5px; }
+    .pagination-custom .page-link {
+        border-radius: 12px !important; border: 1px solid #e2e8f0;
+        color: #6200ea; font-weight: 600; width: 40px; height: 40px;
+        display: flex; align-items: center; justify-content: center;
+        background-color: #fff; transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .pagination-custom .page-link:hover { background-color: #f3e5f5; color: #6200ea; }
+    .pagination-custom .page-item.active .page-link { background-color: #6200ea; color: #fff; border-color: #6200ea; }
+    .pagination-custom .page-item.disabled .page-link { background-color: #f1f5f9; color: #94a3b8; }
 
-	<div class="container-fluid px-3 py-3">
-		<%
-		if (orderList == null || orderList.size() == 0) {
-		%>
-		<div class="container mt-5 mb-5 text-center">
-			<img src="Images/empty-cart.png" style="max-width: 200px;"
-				class="img-fluid">
-			<h4 class="mt-3">Zero Order found</h4>
-		</div>
-		<%
-		} else {
-		%>
-		<div class="container-fluid">
-			<table class="table table-hover">
-				<tr class="table-primary" style="font-size: 18px;">
-					<th class="text-center">Product</th>
-					<th>Order ID</th>
-					<th>Product Details</th>
-					<th>Delivery Address</th>
-					<th>Date & Time</th>
-					<th>Payment Type</th>
-					<th>Status</th>
-					<th colspan="2" class="text-center">Action</th>
-				</tr>
-				<%
-				for (Order order : orderList) {
-					List<OrderedProduct> ordProdList = ordProdDao.getAllOrderedProduct(order.getId());
-					for (OrderedProduct orderProduct : ordProdList) {
-				%>
-				<form action="UpdateOrderServlet?oid=<%=order.getId()%>"
-					method="post">
-				<tr>
-					<td class="text-center"><img
-						src="Images/<%=orderProduct.getImage()%>"
-						style="width: 50px; height: 50px; width: auto;"></td>
-					<td><%=order.getOrderId()%></td>
-					<td><%=orderProduct.getName()%><br>Quantity: <%=orderProduct.getQuantity()%><br>Total
-						Price: &#8377;<%=orderProduct.getPrice() * orderProduct.getQuantity()%></td>
-					<td><%=userDao.getUserName(order.getUserId())%><br>Mobile No. <%=userDao.getUserPhone(order.getUserId())%><br><%=userDao.getUserAddress(order.getUserId())%></td>
-					<td><%=order.getDate()%></td>
-					<td><%=order.getPayementType()%></td>
-					<td><%=order.getStatus()%></td>
-					<td><select id="operation" name="status" class="form-select">
-							<option>--Select Operation--</option>
-							<option value="Order Confirmed">Order Confirmed</option>
-							<option value="Shipped">Shipped</option>
-							<option value="Out For Delivery">Out For Delivery</option>
-							<option value="Delivered">Delivered</option>
-					</select></td>
-					<td>
-						<%
-						if (order.getStatus().equals("Delivered")) {
-						%>
-						<button type="submit" class="btn btn-success disabled">Update</button>
-						<%
-						} else {
-						%>
-						<button type="submit" class="btn btn-secondary">Update</button> 
-						<%
-						 }
-						 %>
-					</td>
-				</tr>
-				</form>
-				<%
-				}
-				}
-				%>
-			</table>
+    /* Style Dropdown Trạng thái */
+    .status-select {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: 1px solid #e0e0e0;
+        cursor: pointer;
+        appearance: none; 
+        background-color: #fff;
+        text-align: center;
+        transition: all 0.3s;
+        width: 100%; /* Để dropdown full ô */
+        min-width: 140px;
+    }
+    
+    /* MÀU SẮC TRẠNG THÁI */
+    .st-delivered { background-color: #dcfce7; color: #166534; border-color: #bbf7d0; } /* Xanh lá */
+    .st-shipped { background-color: #dbeafe; color: #1e40af; border-color: #bfdbfe; }   /* Xanh dương */
+    .st-confirmed { background-color: #f3e8ff; color: #6b21a8; border-color: #e9d5ff; } /* Tím */
+    .st-processing { background-color: #fff7ed; color: #9a3412; border-color: #ffedd5; }/* Cam */
+    .st-cancelled { background-color: #fee2e2; color: #991b1b; border-color: #fca5a5; }  /* Đỏ (Mới) */
+</style>
 
-		</div>
-		<%
-		}
-		%>
-	</div>
-</body>
-</html>
+<div class="container-fluid px-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-secondary"><i class="fas fa-file-invoice-dollar me-2"></i>Quản lý Đơn hàng</h3>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <div><i class="fas fa-list me-2 text-primary"></i> Danh sách đơn hàng</div>
+            <span class="badge bg-light text-dark border"><%=totalItems%> đơn</span>
+        </div>
+        
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary text-center small text-uppercase">
+                        <tr>
+                            <th>Mã Đơn</th>
+                            <th>Sản phẩm</th>
+                            <th style="width: 20%">Khách hàng</th>
+                            <th>Tổng tiền</th>
+                            <th>Ngày đặt</th>
+                            <th>Thanh toán</th>
+                            <th>Trạng thái</th> 
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <%
+                        if (pagedList != null && !pagedList.isEmpty()) {
+                            for (Order order : pagedList) {
+                                List<OrderedProduct> ordProdList = ordProdDao.getAllOrderedProduct(order.getId());
+                                for (OrderedProduct orderProduct : ordProdList) {
+                                    
+                                    // === XỬ LÝ MÀU SẮC BAN ĐẦU ===
+                                    String stClass = "bg-light";
+                                    String st = order.getStatus();
+                                    
+                                    if(st.equalsIgnoreCase("Delivered")) stClass = "st-delivered";
+                                    else if(st.equalsIgnoreCase("Shipped")) stClass = "st-shipped";
+                                    else if(st.equalsIgnoreCase("Order Confirmed")) stClass = "st-confirmed";
+                                    else if(st.equalsIgnoreCase("Out For Delivery")) stClass = "st-processing";
+                                    else if(st.equalsIgnoreCase("Cancelled")) stClass = "st-cancelled"; // Thêm dòng này
+                        %>
+                        <tr>
+                            <td class="text-center fw-bold text-primary"><%=order.getOrderId()%></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="Images/<%=orderProduct.getImage()%>" style="width: 40px; height: 40px; object-fit: contain; border: 1px solid #eee; border-radius: 6px;" class="me-2">
+                                    <div>
+                                        <div class="fw-semibold text-truncate" style="max-width: 150px;" title="<%=orderProduct.getName()%>">
+                                            <%=orderProduct.getName()%>
+                                        </div>
+                                        <small class="text-muted">x<%=orderProduct.getQuantity()%></small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="small">
+                                <div class="fw-bold"><%=userDao.getUserName(order.getUserId())%></div>
+                                <div class="text-muted text-truncate" style="max-width: 180px;" title="<%=userDao.getUserAddress(order.getUserId())%>">
+                                    <%=userDao.getUserAddress(order.getUserId())%>
+                                </div>
+                            </td>
+                            <td class="text-center fw-bold text-danger">
+                                <%=currencyFormat.format(orderProduct.getPrice() * orderProduct.getQuantity())%> ₫
+                            </td>
+                            <td class="text-center small">
+                                <% try { out.print(dateFormat.format(order.getDate())); } catch(Exception e){ out.print(order.getDate()); } %>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border"><%=order.getPayementType()%></span>
+                            </td>
+                            
+                            <td class="text-center">
+                                <form action="UpdateOrderServlet" method="post" style="margin:0;">
+                                    <input type="hidden" name="oid" value="<%=order.getId()%>">
+                                    <input type="hidden" name="currentPage" value="<%=currentPage%>"> 
+
+                                    <select name="status" class="status-select <%=stClass%>" onchange="this.form.submit()">
+                                        <option value="Order Confirmed" <%=st.equalsIgnoreCase("Order Confirmed")?"selected":""%>>Đã xác nhận</option>
+                                        <option value="Shipped" <%=st.equalsIgnoreCase("Shipped")?"selected":""%>>Đã gửi hàng</option>
+                                        <option value="Out For Delivery" <%=st.equalsIgnoreCase("Out For Delivery")?"selected":""%>>Đang giao</option>
+                                        <option value="Delivered" <%=st.equalsIgnoreCase("Delivered")?"selected":""%>>Giao thành công</option>
+                                        
+                                        <option value="Cancelled" <%=st.equalsIgnoreCase("Cancelled")?"selected":""%> style="color:red; font-weight:bold;">Đã hủy</option>
+                                    </select>
+                                </form>
+                            </td>
+                        </tr>
+                        <% 
+                                }
+                            }
+                        } else { 
+                        %>
+                            <tr><td colspan="7" class="text-center py-4 text-muted">Chưa có đơn hàng nào.</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <% if (totalPages > 1) { %>
+        <div class="card-footer bg-white border-0 py-3">
+            <nav class="d-flex justify-content-center">
+                <ul class="pagination pagination-custom mb-0">
+                    <li class="page-item <%= currentPage == 1 ? "disabled" : "" %>">
+                        <a class="page-link" href="admin.jsp?page=orders&p=<%=currentPage - 1%>"><i class="fas fa-chevron-left fa-xs"></i></a>
+                    </li>
+                    <% for (int i = 1; i <= totalPages; i++) { %>
+                    <li class="page-item <%= currentPage == i ? "active" : "" %>">
+                        <a class="page-link" href="admin.jsp?page=orders&p=<%=i%>"><%=i%></a>
+                    </li>
+                    <% } %>
+                    <li class="page-item <%= currentPage == totalPages ? "disabled" : "" %>">
+                        <a class="page-link" href="admin.jsp?page=orders&p=<%=currentPage + 1%>"><i class="fas fa-chevron-right fa-xs"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.status-select').forEach(select => {
+        select.addEventListener('change', function() {
+            // Xóa các class màu cũ
+            this.classList.remove('st-delivered', 'st-shipped', 'st-confirmed', 'st-processing', 'st-cancelled');
+            
+            // Thêm class màu mới dựa trên value
+            const val = this.value;
+            if(val === 'Delivered') this.classList.add('st-delivered');
+            else if(val === 'Shipped') this.classList.add('st-shipped');
+            else if(val === 'Order Confirmed') this.classList.add('st-confirmed');
+            else if(val === 'Out For Delivery') this.classList.add('st-processing');
+            else if(val === 'Cancelled') this.classList.add('st-cancelled'); // Màu đỏ
+        });
+    });
+</script>

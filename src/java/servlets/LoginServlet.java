@@ -1,6 +1,7 @@
 package servlets;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 
@@ -10,6 +11,7 @@ import entities.Message;
 import entities.User;
 import entities.Admin;
 import helper.ConnectionProvider;
+
 public class LoginServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -31,72 +33,61 @@ public class LoginServlet extends HttpServlet {
                 String userEmail = trim(request.getParameter("user_email"));
                 String userPassword = request.getParameter("user_password");
 
-                // Kiểm tra dữ liệu đầu vào cơ bản
                 if (isBlank(userEmail) || userPassword == null || userPassword.isEmpty()) {
-
-                    sendMessageAndRedirect(session, response,
-                            "Vui lòng nhập đầy đủ email và mật khẩu!", "error", "alert-danger", "login.jsp");
+                    sendMessageAndRedirect(session, response, "Vui lòng nhập đầy đủ email và mật khẩu!", "error", "alert-danger", "login.jsp");
                     return;
                 }
 
                 UserDao userDao = new UserDao(ConnectionProvider.getConnection());
+                
+                // Sửa lại: Nên dùng hàm check cả email và pass trong DAO nếu có
+                // Nhưng tạm thời giữ logic cũ của bạn cho User
+                User user = userDao.getUserByEmailAndPassword(userEmail, userPassword);
 
-                // Lấy user theo email
-                User user = userDao.getUserByEmail(userEmail);
-
-                // Kiểm tra user tồn tại + mật khẩu đúng (SO SÁNH PLAIN TEXT)
-                if (user != null && userPassword.equals(user.getUserPassword())) {
-                    user.setUserPassword(null); // tránh để mật khẩu trong session
+                if (user != null) {
                     session.setAttribute("activeUser", user);
-                    session.removeAttribute("message"); // xóa thông báo lỗi cũ
+                    session.removeAttribute("message");
                     response.sendRedirect("index.jsp");
-
                 } else {
-                    sendMessageAndRedirect(session, response,
-                            "Email hoặc mật khẩu không đúng!", "error", "alert-danger", "login.jsp");
+                    sendMessageAndRedirect(session, response, "Email hoặc mật khẩu không đúng!", "error", "alert-danger", "login.jsp");
                 }
-
                 return;
             }
 
-            // ====================== ĐĂNG NHẬP ADMIN ======================
+            // ====================== ĐĂNG NHẬP ADMIN (ĐÃ SỬA) ======================
             if ("admin".equalsIgnoreCase(loginType)) {
 
-                String adminEmail = trim(request.getParameter("email"));
+                String adminEmail = trim(request.getParameter("email")); // Form admin dùng name="email"
                 String adminPassword = request.getParameter("password");
 
                 if (isBlank(adminEmail) || adminPassword == null || adminPassword.isEmpty()) {
-
-                    sendMessageAndRedirect(session, response,
-                            "Vui lòng nhập đầy đủ thông tin!", "error", "alert-danger", "adminlogin.jsp");
+                    sendMessageAndRedirect(session, response, "Vui lòng nhập đầy đủ thông tin!", "error", "alert-danger", "adminlogin.jsp");
                     return;
                 }
 
                 AdminDao adminDao = new AdminDao(ConnectionProvider.getConnection());
-                Admin admin = adminDao.getAdminByEmail(adminEmail);
+                
+                // 1. Dùng hàm kiểm tra cả Email & Password (Hàm mới thêm trong AdminDao)
+                Admin admin = adminDao.getAdminByEmailAndPassword(adminEmail, adminPassword);
 
-                // Đăng nhập admin với mật khẩu plain text
-                if (admin != null && adminPassword.equals(admin.getPassword())) {
-                    admin.setPassword(null);
+                if (admin != null) {
+                    // 2. Lưu vào Session (Không set null password để còn hiện thị ở Profile)
                     session.setAttribute("activeAdmin", admin);
+                    
                     session.removeAttribute("message");
                     response.sendRedirect("admin.jsp");
-
                 } else {
-                    sendMessageAndRedirect(session, response,
-                            "Tài khoản hoặc mật khẩu admin không đúng!", "error", "alert-danger", "adminlogin.jsp");
+                    sendMessageAndRedirect(session, response, "Tài khoản hoặc mật khẩu admin không đúng!", "error", "alert-danger", "adminlogin.jsp");
                 }
                 return;
             }
 
             // Nếu loginType không hợp lệ
-            sendMessageAndRedirect(session, response,
-                    "Yêu cầu không hợp lệ!", "error", "alert-danger", "login.jsp");
+            sendMessageAndRedirect(session, response, "Yêu cầu không hợp lệ!", "error", "alert-danger", "login.jsp");
 
         } catch (Exception e) {
             e.printStackTrace();
-            sendMessageAndRedirect(session, response,
-                    "Đăng nhập thất bại, vui lòng thử lại sau!", "error", "alert-danger", "login.jsp");
+            sendMessageAndRedirect(session, response, "Đăng nhập thất bại, vui lòng thử lại sau!", "error", "alert-danger", "login.jsp");
         }
     }
 
