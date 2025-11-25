@@ -148,22 +148,28 @@
 <div class="container-fluid px-4">
     
     <div class="filter-bar">
-        <h4 class="mb-0 fw-bold text-secondary"><i class="fas fa-chart-line me-2"></i>Thống kê doanh thu</h4>
+    <h4 class="mb-0 fw-bold text-secondary"><i class="fas fa-chart-line me-2"></i>Thống kê doanh thu</h4>
+    
+    <form action="admin.jsp" method="get" class="d-flex gap-2 align-items-center">
+        <input type="hidden" name="page" value="dashboard">
+        <div class="input-group">
+            <span class="input-group-text bg-light">Từ</span>
+            <input type="date" class="form-control" name="startDate" value="<%= startDateStr %>">
+        </div>
         
-        <form action="admin.jsp" method="get" class="d-flex gap-2 align-items-center">
-            <input type="hidden" name="page" value="dashboard"> <div class="input-group">
-                <span class="input-group-text bg-light">Từ</span>
-                <input type="date" class="form-control" name="startDate" value="<%= startDateStr %>">
-            </div>
-            
-            <div class="input-group">
-                <span class="input-group-text bg-light">Đến</span>
-                <input type="date" class="form-control" name="endDate" value="<%= endDateStr %>">
-            </div>
-            
-            <button type="submit" class="btn btn-primary px-4"><i class="fas fa-filter"></i> Lọc</button>
-        </form>
-    </div>
+        <div class="input-group">
+            <span class="input-group-text bg-light">Đến</span>
+            <input type="date" class="form-control" name="endDate" value="<%= endDateStr %>">
+        </div>
+        
+        <button type="submit" class="btn btn-primary px-4"><i class="fas fa-filter"></i> Lọc</button>
+        
+        <a href="ExportRevenueServlet?startDate=<%= startDateStr %>&endDate=<%= endDateStr %>" 
+           class="btn btn-success px-4">
+           <i class="fas fa-file-excel"></i>Excel
+        </a>
+    </form>
+</div>
 
     <div class="row g-4">
         <div class="col-md-4">

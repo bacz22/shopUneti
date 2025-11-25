@@ -17,6 +17,7 @@
     OrderedProductDao ordProdDao = new OrderedProductDao(ConnectionProvider.getConnection());
     UserDao userDao = new UserDao(ConnectionProvider.getConnection());
     
+    // Lấy TOÀN BỘ danh sách đơn hàng để tính toán
     List<Order> fullList = orderDao.getAllOrder();
 
     // 2. Xử lý Phân trang (8 item/trang)
@@ -24,20 +25,27 @@
     int totalItems = (fullList != null) ? fullList.size() : 0;
     int totalPages = (int) Math.ceil((double) totalItems / itemsPerPage);
     
+    // Lấy trang hiện tại
     int currentPage = 1;
     String pageParam = request.getParameter("p");
     if (pageParam != null) {
-        try { currentPage = Integer.parseInt(pageParam); } catch (Exception e) {}
+        try { currentPage = Integer.parseInt(pageParam); } catch (Exception e) { currentPage = 1; }
     }
-    if (currentPage < 1) currentPage = 1;
-    if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
-
-    int startIdx = (currentPage - 1) * itemsPerPage;
-    int endIdx = Math.min(startIdx + itemsPerPage, totalItems);
     
+    // Kiểm tra giới hạn trang (tránh lỗi khi nhập số trang bậy bạ)
+    if (currentPage < 1) currentPage = 1;
+    if (totalPages > 0 && currentPage > totalPages) currentPage = totalPages;
+
+    // Cắt danh sách con (SubList) cho trang hiện tại
     List<Order> pagedList = null;
-    if(totalItems > 0) {
-        pagedList = fullList.subList(startIdx, endIdx);
+    if (totalItems > 0) {
+        int startIdx = (currentPage - 1) * itemsPerPage;
+        int endIdx = Math.min(startIdx + itemsPerPage, totalItems);
+        
+        // Đảm bảo index không vượt quá giới hạn
+        if (startIdx < totalItems) {
+            pagedList = fullList.subList(startIdx, endIdx);
+        }
     }
     
     // Format
@@ -85,9 +93,13 @@
 
 <div class="container-fluid px-4">
     
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold text-secondary"><i class="fas fa-file-invoice-dollar me-2"></i>Quản lý Đơn hàng</h3>
-    </div>
+   <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-secondary"><i class="fas fa-file-invoice-dollar me-2"></i>Quản lý Đơn hàng</h3>
+    
+    <a href="ExportOrderServlet" class="btn btn-success rounded-pill px-4 shadow-sm">
+        <i class="fas fa-file-excel me-2"></i> Xuất Excel
+    </a>
+</div>
 
     <div class="card border-0 shadow-sm rounded-3">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
@@ -124,7 +136,7 @@
                                     else if(st.equalsIgnoreCase("Shipped")) stClass = "st-shipped";
                                     else if(st.equalsIgnoreCase("Order Confirmed")) stClass = "st-confirmed";
                                     else if(st.equalsIgnoreCase("Out For Delivery")) stClass = "st-processing";
-                                    else if(st.equalsIgnoreCase("Cancelled")) stClass = "st-cancelled"; // Thêm dòng này
+                                    else if(st.equalsIgnoreCase("Cancelled")) stClass = "st-cancelled";
                         %>
                         <tr>
                             <td class="text-center fw-bold text-primary"><%=order.getOrderId()%></td>
@@ -165,7 +177,6 @@
                                         <option value="Shipped" <%=st.equalsIgnoreCase("Shipped")?"selected":""%>>Đã gửi hàng</option>
                                         <option value="Out For Delivery" <%=st.equalsIgnoreCase("Out For Delivery")?"selected":""%>>Đang giao</option>
                                         <option value="Delivered" <%=st.equalsIgnoreCase("Delivered")?"selected":""%>>Giao thành công</option>
-                                        
                                         <option value="Cancelled" <%=st.equalsIgnoreCase("Cancelled")?"selected":""%> style="color:red; font-weight:bold;">Đã hủy</option>
                                     </select>
                                 </form>

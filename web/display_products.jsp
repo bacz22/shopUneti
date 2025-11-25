@@ -8,21 +8,26 @@
 <%@page import="entities.Message"%>
 <%@page errorPage="error_exception.jsp"%>
 <%@ page pageEncoding="UTF-8" contentType="text/html; charset=UTF-8" %>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <%
     // 1. Khởi tạo DAO & Lấy dữ liệu
     ProductDao productDao = new ProductDao(ConnectionProvider.getConnection());
     CategoryDao catDao = new CategoryDao(ConnectionProvider.getConnection());
     
     List<Product> fullList = productDao.getAllProducts();
-    List<Category> categoryList = catDao.getAllCategories(); // Để dùng trong Modal
+    List<Category> categoryList = catDao.getAllCategories();
 
     // 2. Xử lý phân trang
     int itemsPerPage = 8; // Số lượng sản phẩm mỗi trang
+    
+    // Lấy TỔNG SỐ SẢN PHẨM từ danh sách đầy đủ
     int totalItems = (fullList != null) ? fullList.size() : 0;
+    
     int totalPages = (int) Math.ceil((double) totalItems / itemsPerPage);
     
-    // Lấy trang hiện tại từ URL (mặc định 1)
+    // Lấy trang hiện tại
     int currentPage = 1;
     String pageParam = request.getParameter("p");
     if (pageParam != null) {
@@ -32,46 +37,34 @@
             currentPage = 1;
         }
     }
+    
+    // Kiểm tra giới hạn trang
     if (currentPage < 1) currentPage = 1;
-    if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+    if (totalPages > 0 && currentPage > totalPages) currentPage = totalPages;
 
-    // Cắt danh sách con
+    // Cắt danh sách con cho trang hiện tại
     int startIdx = (currentPage - 1) * itemsPerPage;
     int endIdx = Math.min(startIdx + itemsPerPage, totalItems);
     
     List<Product> pagedList = null;
-    if(totalItems > 0) {
+    if(totalItems > 0 && startIdx < totalItems) {
         pagedList = fullList.subList(startIdx, endIdx);
+    } else {
+        pagedList = new java.util.ArrayList<>(); // Tránh null pointer
     }
 %>
 
 <style>
-    .modal-header-custom {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white; padding: 20px;
-    }
-    .prod-img-container {
-        position: relative; width: 140px; height: 140px; margin: 0 auto 20px;
-        border-radius: 50%; padding: 4px; background: white;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.15); cursor: pointer;
-    }
-    .prod-img-preview {
-        width: 100%; height: 100%; object-fit: contain; border-radius: 50%;
-        border: 1px solid #eee; transition: filter 0.3s;
-    }
+    .modal-header-custom { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; }
+    .prod-img-container { position: relative; width: 140px; height: 140px; margin: 0 auto 20px; border-radius: 50%; padding: 4px; background: white; box-shadow: 0 5px 15px rgba(0,0,0,0.15); cursor: pointer; }
+    .prod-img-preview { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; border: 1px solid #eee; transition: filter 0.3s; }
     .prod-img-container:hover .prod-img-preview { filter: brightness(0.7); }
-    .camera-icon {
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        color: white; font-size: 1.8rem; opacity: 0; transition: opacity 0.3s;
-    }
+    .camera-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.8rem; opacity: 0; transition: opacity 0.3s; }
     .prod-img-container:hover .camera-icon { opacity: 1; }
-    .upload-label {
-        position: absolute; bottom: 0; right: 10px; background: #667eea;
-        color: white; width: 35px; height: 35px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center; border: 3px solid white;
-    }
+    .upload-label { position: absolute; bottom: 0; right: 10px; background: #667eea; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; }
     .spec-table th { background-color: #f8f9fa; font-size: 0.9rem; }
-    /* --- CSS PHÂN TRANG ĐẸP --- */
+
+    /* Pagination */
     .pagination-custom .page-item { margin: 0 5px; }
     .pagination-custom .page-link {
         border-radius: 12px !important; border: 1px solid #e2e8f0;
@@ -80,25 +73,25 @@
         background-color: #fff; transition: all 0.3s ease;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
-    .pagination-custom .page-link:hover {
-        background-color: #f3e5f5; border-color: #6200ea; color: #6200ea;
-    }
-    .pagination-custom .page-item.active .page-link {
-        background-color: #6200ea; border-color: #6200ea; color: #fff;
-        box-shadow: 0 4px 10px rgba(98, 0, 234, 0.3);
-    }
-    .pagination-custom .page-item.disabled .page-link {
-        background-color: #f1f5f9; color: #94a3b8; border-color: #f1f5f9; pointer-events: none;
-    }
+    .pagination-custom .page-link:hover { background-color: #f3e5f5; border-color: #6200ea; color: #6200ea; }
+    .pagination-custom .page-item.active .page-link { background-color: #6200ea; border-color: #6200ea; color: #fff; box-shadow: 0 4px 10px rgba(98, 0, 234, 0.3); }
+    .pagination-custom .page-item.disabled .page-link { background-color: #f1f5f9; color: #94a3b8; border-color: #f1f5f9; pointer-events: none; }
 </style>
 
 <div class="container-fluid px-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold text-secondary"><i class="fas fa-box-open me-2"></i>Quản lý Sản phẩm</h3>
+    <h3 class="fw-bold text-secondary"><i class="fas fa-box-open me-2"></i>Quản lý Sản phẩm</h3>
+    
+    <div>
+        <a href="ExportProductServlet" class="btn btn-success rounded-pill px-4 shadow-sm me-2">
+            <i class="fas fa-file-excel me-2"></i> Xuất Excel
+        </a>
+        
         <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#add-product">
             <i class="fas fa-plus me-2"></i> Thêm mới
         </button>
     </div>
+</div>
 
     <div class="card border-0 shadow-sm rounded-3">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
@@ -152,7 +145,6 @@
                                         data-qty="<%=prod.getProductQunatity()%>"
                                         data-discount="<%=prod.getProductDiscount()%>"
                                         data-desc="<%=prod.getProductDescription()%>"
-                                        
                                         <%
                                             String safeSpec = "";
                                             if (prod.getSpecifications() != null) {
@@ -160,7 +152,6 @@
                                             }
                                         %>
                                         data-spec="<%=safeSpec%>"    
-                                        
                                         data-catid="<%=prod.getCategoryId()%>"
                                         data-img="<%=prod.getProductImages()%>">
                                     <i class="fas fa-pen"></i>
@@ -212,7 +203,6 @@
 <%@include file="update_product.jsp"%>
 
 <script>
-    // HÀM XÓA SẢN PHẨM (Dùng SweetAlert2)
     function confirmDelete(pid) {
         Swal.fire({
             title: 'Bạn có chắc chắn?',
@@ -225,7 +215,6 @@
             cancelButtonText: 'Hủy bỏ'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Chuyển hướng để xóa
                 window.location.href = "AddOperationServlet?pid=" + pid + "&operation=deleteProduct";
             }
         });

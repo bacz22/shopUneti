@@ -44,8 +44,12 @@
 <div class="container-fluid px-4 mt-4">
     
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold text-secondary"><i class="fas fa-envelope me-2"></i>Quản lý Liên hệ</h3>
-    </div>
+    <h3 class="fw-bold text-secondary"><i class="fas fa-envelope me-2"></i>Quản lý Liên hệ</h3>
+    
+    <a href="ExportContactServlet" class="btn btn-success rounded-pill px-4 shadow-sm">
+        <i class="fas fa-file-excel me-2"></i> Xuất Excel
+    </a>
+</div>
 
     <div class="card border-0 shadow-sm rounded-3">
         <div class="card-header card-header-contact d-flex justify-content-between align-items-center">

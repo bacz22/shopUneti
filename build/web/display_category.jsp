@@ -90,11 +90,18 @@
 
 <div class="container-fluid px-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold text-secondary"><i class="fas fa-th-large me-2"></i>Quản lý Danh mục</h3>
+    <h3 class="fw-bold text-secondary"><i class="fas fa-th-large me-2"></i>Quản lý Danh mục</h3>
+    
+    <div>
+        <a href="ExportCategoryServlet" class="btn btn-success rounded-pill px-4 shadow-sm me-2">
+            <i class="fas fa-file-excel me-2"></i> Xuất Excel
+        </a>
+        
         <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#add-category">
             <i class="fas fa-plus me-2"></i> Thêm mới
         </button>
     </div>
+</div>
 
     <div class="card border-0 shadow-sm rounded-3">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">

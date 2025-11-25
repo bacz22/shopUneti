@@ -81,8 +81,12 @@
 <div class="container-fluid px-4 mt-4">
     
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold text-secondary"><i class="fas fa-users me-2"></i>Quản lý Người dùng</h3>
-    </div>
+    <h3 class="fw-bold text-secondary"><i class="fas fa-users me-2"></i>Quản lý Người dùng</h3>
+    
+    <a href="ExportUserServlet" class="btn btn-success rounded-pill px-4 shadow-sm">
+        <i class="fas fa-file-excel me-2"></i> Xuất Excel
+    </a>
+</div>
 
     <div class="card card-custom">
         <div class="card-header card-header-custom">
