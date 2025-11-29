@@ -161,10 +161,13 @@
                     <label class="form-label">
                         <i class="fas fa-lock me-2"></i>Mật khẩu
                     </label>
-                    <div class="input-group">
+                    <div class="input-group position-relative">
                         <span class="input-group-text"><i class="fas fa-key"></i></span>
-                        <input type="password" name="password" class="form-control" 
+                        <input id="admin_password" type="password" name="password" class="form-control pe-5" 
                                placeholder="nhập mật khẩu" required>
+                        <button type="button" class="btn btn-sm password-toggle" data-target="admin_password" aria-label="Hiện/ẩn mật khẩu" aria-pressed="false">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
                 </div>
 

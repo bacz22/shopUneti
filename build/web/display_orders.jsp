@@ -138,7 +138,7 @@
                                     else if(st.equalsIgnoreCase("Out For Delivery")) stClass = "st-processing";
                                     else if(st.equalsIgnoreCase("Cancelled")) stClass = "st-cancelled";
                         %>
-                        <tr>
+                        <tr ondblclick="viewOrderDetails(<%=order.getId()%>)" style="cursor: pointer;" title="Nhấn đúp để xem chi tiết">
                             <td class="text-center fw-bold text-primary"><%=order.getOrderId()%></td>
                             <td>
                                 <div class="d-flex align-items-center">
@@ -216,19 +216,90 @@
     </div>
 </div>
 
+<div class="modal fade" id="orderDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-receipt me-2"></i>Chi tiết đơn hàng #<span id="modalOrderId"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0 align-middle">
+                        <thead class="bg-light text-secondary">
+                            <tr>
+                                <th class="text-center">STT</th>
+                                <th>Sản phẩm</th>
+                                <th class="text-center">SL</th>
+                                <th class="text-end">Đơn giá</th>
+                                <th class="text-end">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderDetailContent">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    // Hàm xử lý khi click đúp
+    function viewOrderDetails(orderId) {
+        // 1. Cập nhật ID lên tiêu đề Modal
+        document.getElementById('modalOrderId').innerText = orderId;
+        
+        // 2. Hiển thị loading trong lúc chờ
+        const contentBody = document.getElementById('orderDetailContent');
+        contentBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <div class="mt-2 text-muted small">Đang tải dữ liệu...</div>
+                </td>
+            </tr>`;
+
+        // 3. Mở Modal
+        var myModal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
+        myModal.show();
+
+        // 4. Gọi AJAX lấy dữ liệu từ file load_order_details.jsp
+        fetch('load_order_details.jsp?orderId=' + orderId)
+            .then(response => {
+                if (!response.ok) throw new Error('Lỗi mạng');
+                return response.text();
+            })
+            .then(htmlData => {
+                // 5. Đổ dữ liệu vào bảng
+                contentBody.innerHTML = htmlData;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                contentBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center text-danger p-3">
+                            <i class="fas fa-exclamation-triangle me-1"></i> Không thể tải chi tiết đơn hàng!
+                        </td>
+                    </tr>`;
+            });
+    }
+
+    // (Giữ nguyên phần script xử lý màu sắc status của bạn ở đây)
     document.querySelectorAll('.status-select').forEach(select => {
         select.addEventListener('change', function() {
-            // Xóa các class màu cũ
             this.classList.remove('st-delivered', 'st-shipped', 'st-confirmed', 'st-processing', 'st-cancelled');
-            
-            // Thêm class màu mới dựa trên value
             const val = this.value;
             if(val === 'Delivered') this.classList.add('st-delivered');
             else if(val === 'Shipped') this.classList.add('st-shipped');
             else if(val === 'Order Confirmed') this.classList.add('st-confirmed');
             else if(val === 'Out For Delivery') this.classList.add('st-processing');
-            else if(val === 'Cancelled') this.classList.add('st-cancelled'); // Màu đỏ
+            else if(val === 'Cancelled') this.classList.add('st-cancelled');
         });
     });
 </script>

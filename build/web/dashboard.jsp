@@ -13,7 +13,7 @@
     OrderedProductDao ordProdDao = new OrderedProductDao(ConnectionProvider.getConnection());
     List<Order> allOrders = orderDao.getAllOrder();
 
-    // 2. XỬ LÝ BỘ LỌC NGÀY (FILTER)
+    // 2. XỬ LÝ BỘ LỌC NGÀY
     String startDateStr = request.getParameter("startDate");
     String endDateStr = request.getParameter("endDate");
     
@@ -21,7 +21,6 @@
     Date startDate = null;
     Date endDate = null;
     
-    // Mặc định: Lấy 30 ngày gần nhất nếu không chọn
     if(startDateStr == null || startDateStr.isEmpty()) {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DATE, -30);
@@ -32,7 +31,7 @@
     }
     
     if(endDateStr == null || endDateStr.isEmpty()) {
-        endDate = new Date(); // Hôm nay
+        endDate = new Date();
         endDateStr = sdf.format(endDate);
     } else {
         endDate = sdf.parse(endDateStr);
@@ -44,55 +43,78 @@
     int deliveredOrders = 0;
     int cancelledOrders = 0;
     
-    // Map để lưu dữ liệu cho Biểu đồ (Ngày -> Doanh thu)
-    Map<String, Double> chartData = new TreeMap<>(); // TreeMap để tự sắp xếp theo ngày
+    Map<String, Double> chartData = new TreeMap<>();
+    
+    // --- [MỚI THÊM] Map lưu Tên Sản Phẩm -> Số lượng bán ---
+    Map<String, Integer> productSalesMap = new HashMap<>();
 
     for (Order order : allOrders) {
-        // Chuyển ngày đặt hàng về dạng yyyy-MM-dd để so sánh
         String orderDateStr = sdf.format(order.getDate());
         Date orderDate = sdf.parse(orderDateStr);
 
-        // Kiểm tra xem đơn hàng có nằm trong khoảng ngày lọc không
         if (orderDate.compareTo(startDate) >= 0 && orderDate.compareTo(endDate) <= 0) {
             totalOrders++;
             
-            // Tính tổng tiền của đơn hàng này
             double orderTotal = 0;
             List<OrderedProduct> products = ordProdDao.getAllOrderedProduct(order.getId());
+            
+            // Tính tổng tiền đơn hàng trước
             for(OrderedProduct p : products) {
                 orderTotal += p.getPrice() * p.getQuantity();
             }
 
-            // Chỉ cộng doanh thu nếu đơn hàng thành công (Delivered)
             if ("Delivered".equalsIgnoreCase(order.getStatus())) {
                 totalRevenue += orderTotal;
                 deliveredOrders++;
-                
-                // Cộng dồn vào dữ liệu biểu đồ
                 chartData.put(orderDateStr, chartData.getOrDefault(orderDateStr, 0.0) + orderTotal);
+
+                // --- [MỚI THÊM] Cộng dồn số lượng bán cho từng sản phẩm ---
+                for(OrderedProduct p : products) {
+                    String pName = p.getName(); // Giả sử OrderedProduct có hàm getName()
+                    int qty = p.getQuantity();
+                    productSalesMap.put(pName, productSalesMap.getOrDefault(pName, 0) + qty);
+                }
+
             } else if ("Cancelled".equalsIgnoreCase(order.getStatus())) {
                 cancelledOrders++;
             }
         }
     }
 
-    // 4. CHUẨN BỊ DỮ LIỆU JSON CHO CHART.JS
+    // --- [MỚI THÊM] Xử lý sắp xếp Top 5 ---
+    List<Map.Entry<String, Integer>> sortedProducts = new ArrayList<>(productSalesMap.entrySet());
+    
+    // Sắp xếp giảm dần theo số lượng (cho Best Seller)
+    Collections.sort(sortedProducts, (a, b) -> b.getValue().compareTo(a.getValue()));
+
+    // Lấy Top 5 bán chạy
+    List<Map.Entry<String, Integer>> top5Best = new ArrayList<>();
+    for(int i = 0; i < Math.min(5, sortedProducts.size()); i++) {
+        top5Best.add(sortedProducts.get(i));
+    }
+
+    // Lấy Top 5 bán ế (Lấy từ cuối danh sách lên)
+    List<Map.Entry<String, Integer>> top5Worst = new ArrayList<>();
+    if (!sortedProducts.isEmpty()) {
+        int size = sortedProducts.size();
+        // Lấy tối đa 5 phần tử cuối cùng
+        for(int i = size - 1; i >= Math.max(0, size - 5); i--) {
+            top5Worst.add(sortedProducts.get(i));
+        }
+    }
+
+    // 4. CHUẨN BỊ DỮ LIỆU BIỂU ĐỒ (Giữ nguyên)
     StringBuilder labels = new StringBuilder("[");
     StringBuilder data = new StringBuilder("[");
-    
     for (Map.Entry<String, Double> entry : chartData.entrySet()) {
         labels.append("'").append(entry.getKey()).append("',");
         data.append(entry.getValue()).append(",");
     }
-    
-    // Xóa dấu phẩy cuối
     if (labels.length() > 1) labels.setLength(labels.length() - 1);
     if (data.length() > 1) data.setLength(data.length() - 1);
-    
     labels.append("]");
     data.append("]");
     
-    // Format tiền tệ hiển thị
     java.text.NumberFormat currencyVN = java.text.NumberFormat.getInstance(new Locale("vi", "VN"));
 %>
 
@@ -201,6 +223,99 @@
             </div>
         </div>
     </div>
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0 fw-bold text-success">
+                        <i class="fas fa-crown me-2"></i>Top 5 Sản phẩm bán chạy
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">#</th>
+                                    <th>Sản phẩm</th>
+                                    <th class="text-end pe-4">Đã bán</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% 
+                                int rank = 1;
+                                if(top5Best.isEmpty()) { %>
+                                    <tr><td colspan="3" class="text-center py-3">Chưa có dữ liệu</td></tr>
+                                <% } else {
+                                    for(Map.Entry<String, Integer> entry : top5Best) { 
+                                %>
+                                <tr>
+                                    <td class="ps-4 fw-bold text-secondary"><%= rank++ %></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="fw-bold"><%= entry.getKey() %></div>
+                                        </div>
+                                        <div class="progress mt-1" style="height: 4px; width: 80%;">
+                                            <div class="progress-bar bg-success" role="progressbar" 
+                                                 style="width: <%= (entry.getValue() * 100) / top5Best.get(0).getValue() %>%"></div>
+                                        </div>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">
+                                            <%= entry.getValue() %> cái
+                                        </span>
+                                    </td>
+                                </tr>
+                                <% }} %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0 fw-bold text-danger">
+                        <i class="fas fa-box-open me-2"></i>Top 5 Ít người mua
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">#</th>
+                                    <th>Sản phẩm</th>
+                                    <th class="text-end pe-4">Đã bán</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% 
+                                int rankWorst = 1;
+                                if(top5Worst.isEmpty()) { %>
+                                    <tr><td colspan="3" class="text-center py-3">Chưa có dữ liệu</td></tr>
+                                <% } else {
+                                    for(Map.Entry<String, Integer> entry : top5Worst) { 
+                                %>
+                                <tr>
+                                    <td class="ps-4 fw-bold text-secondary"><%= rankWorst++ %></td>
+                                    <td><%= entry.getKey() %></td>
+                                    <td class="text-end pe-4">
+                                        <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill">
+                                            <%= entry.getValue() %> cái
+                                        </span>
+                                    </td>
+                                </tr>
+                                <% }} %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    
 
     <div class="chart-container">
         <h5 class="fw-bold text-secondary mb-4">Biểu đồ tăng trưởng doanh thu</h5>
