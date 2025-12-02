@@ -492,12 +492,6 @@ Admin admin = (Admin) session.getAttribute("activeAdmin");
 						<span>Đăng Nhập</span>
 					</a>
 				</li>
-				<li class="nav-item pe-2">
-					<a class="nav-link" aria-current="page" href="adminlogin.jsp">
-						<i class="fa-solid fa-user-shield"></i>
-						<span>Quản Trị</span>
-					</a>
-				</li>
 			</ul>
 			<%
 			}

@@ -20,12 +20,12 @@ public class LogoutServlet extends HttpServlet {
 		HttpSession session = request.getSession();
 		if(user.trim().equals("user")) {
 			session.removeAttribute("activeUser");
-			Message message = new Message("Logout successfully!!", "success", "alert-success");
+			Message message = new Message("Đã đăng xuất thành công!!", "success", "alert-success");
 			session.setAttribute("message", message);
 			response.sendRedirect("login.jsp");
 		}else if(user.trim().equals("admin")) {
 			session.removeAttribute("activeAdmin");
-			Message message = new Message("Logout successfully!!", "success", "alert-success");
+			Message message = new Message("Đã đăng xuất thành công!!", "success", "alert-success");
 			session.setAttribute("message", message);
 			response.sendRedirect("adminlogin.jsp");
 		}

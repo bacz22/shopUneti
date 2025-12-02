@@ -63,7 +63,7 @@ public class UpdateUserServlet extends HttpServlet {
 
 				userDao.updateUser(user);
 				session.setAttribute("activeUser", user);
-				Message message = new Message("User information updated successfully!!", "success", "alert-success");
+				Message message = new Message("Thông tin người dùng đã được cập nhật thành công!!", "success", "alert-success");
 				session.setAttribute("message", message);
 				response.sendRedirect("profile.jsp");
 
@@ -73,7 +73,7 @@ public class UpdateUserServlet extends HttpServlet {
 		} else if (op.trim().equals("deleteUser")) {
 			int uid = Integer.parseInt(request.getParameter("uid"));
 			userDao.deleteUser(uid);
-			response.sendRedirect("display_users.jsp");
+			response.sendRedirect("admin.jsp?page=users");
 		}
 	}
 

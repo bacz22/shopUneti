@@ -70,11 +70,11 @@ if (activeUser != null) {
                 session.setAttribute("email", email);
                 MailMessenger.sendOtp(email, otp);
 
-                Message message = new Message("We'ev sent a password reset code to " + email, "success", "alert-success");
+                Message message = new Message("Chúng tôi đã gửi mã đặt lại mật khẩu tới " + email, "success", "alert-success");
                 session.setAttribute("message", message);
                 response.sendRedirect("otp_code.jsp");
             } else {
-                Message message = new Message("Email not found! Try with another email!", "error", "alert-danger");
+                Message message = new Message("Không tìm thấy email! Hãy thử bằng email khác!", "error", "alert-danger");
                 session.setAttribute("message", message);
                 response.sendRedirect("forgot_password.jsp");
                 return;
@@ -86,7 +86,7 @@ if (activeUser != null) {
                 session.removeAttribute("otp");
                 response.sendRedirect("change_password.jsp");
             } else {
-                Message message = new Message("Invalid verification code entered!", "error", "alert-danger");
+                Message message = new Message("Mã xác minh đã nhập không hợp lệ!", "error", "alert-danger");
                 session.setAttribute("message", message);
                 response.sendRedirect("otp_code.jsp");
                 return;
@@ -97,7 +97,7 @@ if (activeUser != null) {
             userDao.updateUserPasswordByEmail(password, email);
             session.removeAttribute("email");
 
-            Message message = new Message("Password updated successfully!", "error", "alert-success");
+            Message message = new Message("Đã cập nhật mật khẩu thành công!", "error", "alert-success");
             session.setAttribute("message", message);
             response.sendRedirect("login.jsp");
         }

@@ -33,9 +33,9 @@ public class AdminServlet extends HttpServlet {
 			boolean flag = adminDao.saveAdmin(admin);
 
 			if(flag) {
-				message = new Message("New admin register successfully!", "success", "alert-success");
+				message = new Message("Đăng ký quản trị viên mới thành công!", "success", "alert-success");
 			}else {
-				message = new Message("Sorry! Something went wrong", "error", "alert-danger");
+				message = new Message("Xin lỗi! Có gì đó không ổn", "error", "alert-danger");
 			}
 
 		}else if(operation.trim().equals("delete")) {
@@ -43,9 +43,9 @@ public class AdminServlet extends HttpServlet {
 			int id = Integer.parseInt(request.getParameter("id"));
 			boolean flag = adminDao.deleteAdmin(id);
 			if(flag) {
-				message = new Message("Admin deleted successfully!", "success", "alert-success");
+				message = new Message("Quản trị viên đã xóa thành công!", "success", "alert-success");
 			}else {
-				message = new Message("Sorry! Something went wrong", "error", "alert-danger");
+				message = new Message("Xin lỗi! Có gì đó không ổn", "error", "alert-danger");
 			}
 		}
 		session.setAttribute("message", message);

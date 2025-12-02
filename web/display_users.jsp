@@ -108,7 +108,6 @@
                             <th>Giới tính</th>
                             <th style="width: 20%">Địa chỉ</th>
                             <th>Ngày đăng ký</th>
-                            <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -150,12 +149,6 @@
                             <td class="text-center small">
                                 <% try { out.print(dateFormat.format(u.getDateTime())); } catch(Exception e){ out.print("-"); } %>
                             </td>
-                            
-                            <td class="text-center">
-                                <button onclick="confirmDeleteUser(<%=u.getUserId()%>)" class="btn btn-light text-danger btn-sm" title="Xóa người dùng">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </td>
                         </tr>
                         <% 
                             }
@@ -189,22 +182,3 @@
         <% } %>
     </div>
 </div>
-
-<script>
-    function confirmDeleteUser(uid) {
-        Swal.fire({
-            title: 'Cảnh báo!',
-            text: "Xóa người dùng này sẽ xóa toàn bộ đơn hàng và dữ liệu liên quan của họ.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Xóa vĩnh viễn',
-            cancelButtonText: 'Hủy'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = "UpdateUserServlet?operation=deleteUser&uid=" + uid;
-            }
-        });
-    }
-</script>

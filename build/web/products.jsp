@@ -307,12 +307,15 @@
                 border-color: var(--primary);
                 color: white;
             }
+            .tensanpham{
+                text-decoration: none;
+            }
         </style>
     </head>
     <body>
 
         <%@include file="Components/navbar.jsp"%>
-
+        <%@include file="Components/alert_message.jsp"%>
         <div class="container py-5">
             <div class="row">
 
@@ -411,14 +414,20 @@
                                     <i class="<%= isWishlisted ? "fa-solid" : "fa-regular"%> fa-heart"></i>
                                 </button>
 
-                                <div class="img-wrapper">
-                                    <img src="Images/<%= p.getProductImages()%>" alt="<%= p.getProductName()%>">
-                                </div>
+
+                                <a href="viewProduct.jsp?pid=<%= p.getProductId()%>" title="Xem chi tiết">
+                                    <div class="img-wrapper">
+                                        <img src="Images/<%= p.getProductImages()%>" alt="<%= p.getProductName()%>">
+                                    </div>
+                                </a>
 
                                 <div class="card-body d-flex flex-column pt-0">
-                                    <h6 class="card-title text-dark fw-bold mb-2" style="min-height: 40px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                        <%= p.getProductName()%>
-                                    </h6>
+
+                                    <a href="viewProduct.jsp?pid=<%= p.getProductId()%>" class="tensanpham" title="Xem chi tiết">
+                                        <h6 class="card-title text-dark fw-bold mb-2" style="min-height: 40px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                            <%= p.getProductName()%>
+                                        </h6>
+                                    </a>
 
                                     <div class="mt-auto mb-3">
                                         <span class="price-current"><%= fmt.format(p.getProductPriceAfterDiscount())%> ₫</span>
@@ -436,6 +445,7 @@
                                     <form action="AddToCartServlet" method="post" class="flex-grow-1">
                                         <input type="hidden" name="uid" value="<%= u.getUserId()%>">
                                         <input type="hidden" name="pid" value="<%= p.getProductId()%>">
+                                        <input type="hidden" name="page" value="products">
                                         <button type="submit" class="btn btn-add-cart w-100">
                                             <i class="fas fa-cart-plus me-2"></i> Thêm
                                         </button>
@@ -524,6 +534,7 @@
                     window.location.href = redirectUrl;
                 }
             });
+            
         </script>
         <%@include file="Components/footer.jsp"%>
     </body>
